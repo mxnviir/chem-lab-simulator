@@ -223,7 +223,7 @@ main{display:grid;grid-template-columns:300px 1fr 390px;height:calc(100vh - 60px
 </head>
 <body>
 <header>
-  <div class="brand"><div class="logo">⚗</div><div>ChemLab<small>Qualitative analysis of a simple salt · CBSE Class XI · <span class="ver">build 6</span></small></div></div>
+  <div class="brand"><div class="logo">⚗</div><div>ChemLab<small>Qualitative analysis of a simple salt · CBSE Class XI · <span class="ver">build 7</span></small></div></div>
   <div class="salt-tag" id="saltTag">Unknown salt</div>
   <div class="actions">
     <label class="tg" title="Show the inference for each observation. Off = work it out yourself."><input type="checkbox" id="tgInf"><span class="tg-track"></span><span class="tg-lbl">Inferences</span></label>
@@ -1025,7 +1025,7 @@ function refresh(vid,silent){
   if(silent) return;
   active=vid;
   const swatch=res.vis.ppt?res.vis.ppt.color:(res.vis.lake||res.vis.layer||(res.vis.liquid!==CLEAR?res.vis.liquid:null));
-  showObs({sec:res.sec,test:res.test,exp:describeContents(v),obs:res.obs,inf:res.inf,smell:res.smell,swatch:v.st.items.length>1?swatch:null,recordable:v.st.items.length>0&&res.inf!=='—'});
+  showObs({sec:res.sec,test:res.test,exp:describeContents(v),obs:res.obs,inf:res.inf,smell:res.smell,swatch:v.st.items.length>1?swatch:null,recordable:v.st.items.length>0});   // a result with no inference is still a result worth recording
   renderContents();
 }
 function renderContents(){
@@ -1276,7 +1276,7 @@ function ashTest(){
   const t=T('filterPaper'),has=id=>t.items.includes(id);
   if(!has('salt')||!has('concHNO3')||!has('CoNO3')){
     showObs({sec:PH,test:'Ash test',exp:(t.items.length?'Filter paper carrying '+describeLoad(t):'A dry filter paper')+' burnt in the flame',
-      obs:t.items.length?'The paper burns away leaving an ordinary black ash.':'The dry paper simply burns away.',inf:'—'});
+      obs:t.items.length?'The paper burns away leaving an ordinary black ash.':'The dry paper simply burns away.',inf:'—',recordable:t.items.length>0});
     t.items=[]; t.colour=null; renderShelf(currentCat); renderContents(); return;
   }
   const a=ASH[salt.c]||ASH.none;
