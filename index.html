@@ -111,6 +111,8 @@ main{display:grid;grid-template-columns:300px 1fr 390px;height:calc(100vh - 60px
 .contents-bar .sp{flex:1 0 12px}
 .contents-bar button{padding:5px 10px;font-size:12px}
 .contents-bar .sep{width:1px;height:22px;background:var(--line);margin:0 4px}
+.ctag.rodtag{background:#fef3c7;color:#92400e;cursor:pointer;border:1px solid #fcd34d}
+.ctag.rodtag:hover{background:#fde68a}
 /* ---------- side ---------- */
 .obs{padding:14px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#fff,#fafbff)}
 .obs .head{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
@@ -212,7 +214,7 @@ main{display:grid;grid-template-columns:300px 1fr 390px;height:calc(100vh - 60px
 </head>
 <body>
 <header>
-  <div class="brand"><div class="logo">⚗</div><div>ChemLab<small>Qualitative analysis of a simple salt · CBSE Class XI · <span class="ver">build 3</span></small></div></div>
+  <div class="brand"><div class="logo">⚗</div><div>ChemLab<small>Qualitative analysis of a simple salt · CBSE Class XI · <span class="ver">build 5</span></small></div></div>
   <div class="salt-tag" id="saltTag">Unknown salt</div>
   <div class="actions">
     <label class="tg" title="Show the inference for each observation. Off = work it out yourself."><input type="checkbox" id="tgInf"><span class="tg-track"></span><span class="tg-lbl">Inferences</span></label>
@@ -513,7 +515,7 @@ const GUIDE=[
  {sec:'I. Physical examination',tests:[
   {name:'1. Physical appearance',steps:['Note the colour and appearance of the salt — click <b>Observe</b> on the salt card.'],needs:['observe']},
   {name:'2. Odour test',steps:['Rub a pinch of salt between the fingers with a drop of water and smell it — click <b>Smell</b>.'],needs:['smell']},
-  {name:'3. Flame test',steps:['Dip a glass rod in conc. HCl, then in a little of the salt.','Drag the rod into the non-luminous Bunsen flame and note the colour.'],needs:['rodHCl']},
+  {name:'3. Flame test',steps:['Make a paste: a pinch of salt + a few drops of conc. HCl in a vessel.','Drag the dry glass rod on to the vessel to pick the paste up on the rod.','Drag the rod into the non-luminous Bunsen flame and note the colour.'],needs:['salt','concHCl','rodDry']},
   {name:'4. Ash test',steps:['Take a pinch of salt in the test tube.','Add 3 drops of conc. HNO₃, then a few drops of Co(NO₃)₂ solution.','Dip a filter paper in the mixture (drag paper → tube), then burn the paper in the flame (drag paper → burner).'],needs:['salt','concHNO3','CoNO3','filterPaper']},
   {name:'5. Dry heating',steps:['Take a pinch of the dry salt in the test tube.','Drag the tube on to the burner and note any gas, sublimate or colour change.'],needs:['salt','heat']},
  ]},
@@ -578,9 +580,9 @@ rule(AN,'K₂Cr₂O₇ + conc. H₂SO₄',c=>c.has('K2Cr2O7')&&c.has('concH2SO4'
   const cl=c.A==='Cl';
   if(c.has('PbAc')) return cl?O('A yellow precipitate is obtained.','Presence of chloride is confirmed',{ppt:P(YEL),liquid:'#fef9c3'})
                             :O('No yellow precipitate.','Absence of chloride',{liquid:CLEAR});
-  if(c.has('NaOH')) return cl?O('The red vapours dissolve in NaOH giving a yellow solution. Add dil. acetic acid and lead acetate.','Chloride indicated — continue',{liquid:'#fde047'})
+  if(c.has('NaOH')) return cl?O('The red vapours dissolve in the NaOH giving a yellow solution.','Chloride indicated',{liquid:'#fde047'})
                             :O('No red vapours were evolved; the NaOH solution stays colourless.','Absence of chloride',{liquid:CLEAR});
-  if(!c.H) return O('Orange-red mixture; no vapours in the cold. Heat the tube.','—',{liquid:'#fb923c'});
+  if(!c.H) return O('An orange-red mixture; no vapours are evolved in the cold.','—',{liquid:'#fb923c'});
   return cl?O('Deep red vapours evolve on heating.','Pass the vapours into NaOH solution',{liquid:'#fb923c'},{gas:'CrO2Cl2'})
            :O('No red vapours on heating (orange solution only).','Absence of chloride',{liquid:'#fb923c'});
 });
@@ -588,7 +590,7 @@ rule(AN,'FeSO₄ + conc. H₂SO₄',c=>c.soln&&c.has('FeSO4')&&c.has('concH2SO4'
   ?O('A dark brown ring is formed at the junction of the two layers.','Presence of nitrate is confirmed',{ring:true,liquid:'#d1fae5'})
   :O('No brown ring at the junction of the layers.','Absence of nitrate',{liquid:'#d1fae5'}));
 rule(AN,'Conc. H₂SO₄ + copper turnings',c=>c.salt&&c.has('concH2SO4')&&c.has('copper'),c=>{
-  if(!c.H) return O('No change in the cold. Heat the tube strongly.','—',{});
+  if(!c.H) return O('No change in the cold.','—',{});
   return c.A==='NO3'?O('Dark brown fumes evolve and the solution turns bluish.','Presence of nitrate is confirmed',{liquid:'#bfdbfe'},{gas:'NO2'})
                     :O('No brown fumes evolve.','Absence of nitrate',{});
 });
@@ -596,7 +598,7 @@ rule(AP,'Conc. H₂SO₄ + paper ball',c=>c.salt&&c.has('concH2SO4')&&c.has('pap
   ?O('Reddish brown fumes with pungent smell, which intensify on adding the paper ball.','Presence of nitrate',{},{gas:'NO2'})
   :O('The paper ball chars; no brown fumes.','Absence of nitrate',{liquid:'#e7e5e4'}));
 rule(AN,'Conc. H₂SO₄ + ethanol',c=>c.salt&&c.has('concH2SO4')&&c.has('ethanol'),c=>{
-  if(!c.H) return O('Warm the mixture, then pour it into a beaker of water to smell.','—',{});
+  if(!c.H) return O('No change in the cold.','—',{});
   const w=c.has('water');
   return c.A==='Ac'?O('A pleasant fruity smell'+(w?' from the diluted mixture.':'. Pour into a beaker of water to smell it clearly.'),'Presence of acetate is confirmed',{},{smell:'Pleasant fruity smell'})
                    :O('No fruity smell'+(w?' even after pouring into water.':'.'),'Absence of acetate',{});
@@ -605,12 +607,12 @@ rule(AP,'Conc. H₂SO₄',c=>c.salt&&c.has('concH2SO4'),c=>{
   switch(c.A){
     case 'Cl': return O('A colourless gas with a pungent smell evolves'+(c.H?' briskly on heating':'')+'.','Presence of chloride',{},{gas:'HCl'});
     case 'NO3': return c.H?O('A reddish brown gas with a pungent smell evolves.','Presence of nitrate',{},{gas:'NO2'})
-                          :O('No visible change in the cold. Heat the test tube.','—',{});
+                          :O('No visible change in the cold.','—',{});
     case 'Ac': return c.H?O('Colourless vapours with a vinegar-like smell.','Presence of acetate',{},{gas:'Ac',smell:'Vinegar-like smell'})
-                         :O('Faint vinegar-like smell. Warm the tube.','Acetate may be present',{},{smell:'Faint vinegar smell'});
+                         :O('A faint vinegar-like smell.','Acetate may be present',{},{smell:'Faint vinegar smell'});
     case 'CO3': return O('Brisk effervescence; a colourless, odourless gas is evolved.','Presence of carbonate',{bubbles:true},{gas:'CO2'});
     default: return c.H?O('No characteristic gas or vapour is evolved even on heating.','Absence of chloride, nitrate and acetate',{})
-                       :O('No change in the cold. Heat the tube.','—',{});
+                       :O('No change in the cold.','—',{});
   }
 });
 rule(AP,'Dil. H₂SO₄',c=>c.salt&&c.has('dilH2SO4'),c=>{
@@ -625,8 +627,8 @@ rule(AN,'BaCl₂ + dil. HCl',c=>c.soln&&c.has('BaCl2')&&c.has('dilHCl'),c=>{
   return O('No precipitate.','Absence of sulphate and carbonate',{});
 });
 rule(AP,'BaCl₂',c=>c.soln&&c.has('BaCl2'),c=>{
-  if(c.A==='SO4') return O('A white precipitate is formed.','Presence of sulphate — check its solubility in dil. HCl',{ppt:P(WH)});
-  if(c.A==='CO3') return O('A white precipitate is formed.','Sulphate or carbonate — add dil. HCl to distinguish',{ppt:P(WH)});
+  if(c.A==='SO4') return O('A white precipitate is formed.','Sulphate or carbonate indicated',{ppt:P(WH)});
+  if(c.A==='CO3') return O('A white precipitate is formed.','Sulphate or carbonate indicated',{ppt:P(WH)});
   return O('No white precipitate.','Absence of sulphate',{});
 });
 rule(AN,'AgNO₃ + NH₄OH',c=>c.soln&&c.has('AgNO3')&&c.has('NH4OH'),c=>{
@@ -635,28 +637,28 @@ rule(AN,'AgNO₃ + NH₄OH',c=>c.soln&&c.has('AgNO3')&&c.has('NH4OH'),c=>{
   return O('No precipitate.','Absence of chloride',{});
 });
 rule(AN,'AgNO₃',c=>c.soln&&c.has('AgNO3'),c=>{
-  if(c.A==='Cl') return O('A curdy white precipitate is formed.','Presence of chloride — check solubility in NH₄OH',{ppt:P(WH,'curdy')});
+  if(c.A==='Cl') return O('A curdy white precipitate is formed.','Chloride indicated',{ppt:P(WH,'curdy')});
   if(c.A==='CO3') return O('A pale yellow precipitate is formed.','Carbonate interferes; this is not the chloride precipitate',{ppt:P('#fef08a')});
   return O('No white precipitate.','Absence of chloride',{});
 });
 rule(AN,'MgSO₄',c=>c.soln&&c.has('MgSO4'),c=>c.A==='CO3'
   ?O('A white precipitate is formed in the solution.','Presence of soluble carbonate is confirmed',{ppt:P(WH)})
-  :O('No precipitate.'+(c.has('NH4OH')?'':' Add NH₄OH.'),'Absence of carbonate',{}));
+  :O('No precipitate.','Absence of carbonate',{}));
 rule(AN,'Lead acetate + ammonium acetate',c=>c.soln&&c.has('PbAc')&&c.has('NH4Ac'),c=>{
   if(c.A==='SO4') return O('The white precipitate dissolves in excess of hot ammonium acetate.','Presence of sulphate is confirmed',{});
   if(c.A==='CO3') return O('The white precipitate largely persists.','Carbonate, not sulphate',{ppt:P(WH)});
   return O('No precipitate.','Absence of sulphate',{});
 });
 rule(AN,'Lead acetate',c=>c.soln&&c.has('PbAc'),c=>{
-  if(c.A==='SO4') return O('A white precipitate is formed.','Presence of sulphate — check solubility in hot ammonium acetate',{ppt:P(WH)});
+  if(c.A==='SO4') return O('A white precipitate is formed.','Sulphate indicated',{ppt:P(WH)});
   if(c.A==='CO3') return O('A white precipitate is formed.','Carbonate interferes',{ppt:P(WH)});
   return O('No precipitate.','Absence of sulphate',{});
 });
 rule(AN,'Neutral FeCl₃',c=>c.soln&&c.has('FeCl3'),c=>{
   if(c.A==='Ac') return c.H?O('A reddish brown precipitate is formed on boiling.','Presence of acetate is confirmed',{ppt:P(RB),liquid:'#fde68a'})
-                          :O('Deep red (blood red) colouration. Boil the solution.','Acetate indicated — boil',{liquid:'#dc2626'});
+                          :O('A deep red (blood red) colouration.','Acetate indicated',{liquid:'#dc2626'});
   if(c.A==='CO3') return O('A reddish brown precipitate forms with effervescence.','Carbonate present (interference)',{ppt:P(RB),bubbles:true,liquid:'#fde68a'},{gas:'CO2'});
-  return O('The solution remains yellow; no precipitate'+(c.H?'.':' (boil to confirm).'),'Absence of acetate',{liquid:'#fde68a'});
+  return O('The solution remains yellow; no precipitate.','Absence of acetate',{liquid:'#fde68a'});
 });
 
 /* ---- cation: specific combinations ---- */
@@ -674,19 +676,19 @@ rule(CC,'Magneson reagent + NaOH',c=>c.soln&&c.has('magneson')&&c.has('NaOH'),c=
   ?O('A blue colouration, or a blue precipitate, is formed.','Presence of Mg²⁺ is confirmed',{lake:'#2563eb',liquid:'#c7d2fe'})
   :O('The solution turns violet-red; no blue lake.','Absence of Mg²⁺',{liquid:'#c084fc'}));
 rule(CC,'Conc. HNO₃ + PbO₂',c=>c.salt&&c.has('PbO2')&&c.has('concHNO3'),c=>{
-  if(!c.H) return O('Boil, cool and allow the solid to settle.','—',{ppt:P('#57534e','crystalline')});
+  if(!c.H) return O('A dark brown solid settles out; the liquid above it stays colourless.','—',{ppt:P('#57534e','crystalline')});
   return c.C==='Mn'?O('A pink / purple coloured solution is obtained after settling.','Presence of Mn²⁺ is confirmed',{liquid:'#c026d3',ppt:P('#57534e','crystalline')})
                    :O('No pink colour; the solution stays colourless above the brown solid.','Absence of Mn²⁺',{ppt:P('#57534e','crystalline')});
 });
 rule(CG,'NaOH',c=>c.salt&&c.has('NaOH'),c=>{
   const ex=c.n('NaOH')>1,H=c.H,C=c.C;
   if(C==='NH4') return H?O('A colourless gas with the smell of ammonia is evolved.','Presence of Group 0 (NH₄⁺)',{},{gas:'NH3',smell:'Ammoniacal smell'})
-                        :O('Faint smell of ammonia in the cold. Heat to evolve the gas freely.','NH₄⁺ suspected — heat',{},{gas:'NH3',smell:'Faint ammonia smell'});
+                        :O('A faint smell of ammonia in the cold.','NH₄⁺ indicated',{},{gas:'NH3',smell:'Faint ammonia smell'});
   const tail=H?' No ammonia gas is evolved.':'';
   const r={
     Cu:[H?'A pale blue precipitate turns black on heating.':'A pale blue precipitate, insoluble in excess NaOH.','Cu²⁺ indicated',P(H?BLK:PBLUE)],
-    Al:[ex?'The white gelatinous precipitate dissolves in excess NaOH.':'A white gelatinous precipitate. Add excess NaOH.','Al³⁺ indicated (amphoteric hydroxide)',ex?null:P(WH,'gel')],
-    Zn:[ex?'The white precipitate dissolves in excess NaOH.':'A white precipitate is formed. Add excess NaOH.',ex?'Presence of Zn²⁺ is confirmed':'Zn²⁺ indicated',ex?null:P(WH)],
+    Al:[ex?'The white gelatinous precipitate dissolves in excess NaOH.':'A white gelatinous precipitate is formed.','Al³⁺ indicated (amphoteric hydroxide)',ex?null:P(WH,'gel')],
+    Zn:[ex?'The white precipitate dissolves in excess NaOH.':'A white precipitate is formed.',ex?'Presence of Zn²⁺ is confirmed':'Zn²⁺ indicated',ex?null:P(WH)],
     Pb:[ex?'The white precipitate dissolves in excess NaOH.':'A white precipitate is formed.','Pb²⁺ indicated',ex?null:P(WH)],
     Mn:['A white precipitate that turns brown on shaking, or on standing in air.','Presence of Mn²⁺ is confirmed',P(BRNW)],
     Co:['Blue precipitate turning pink on standing'+(H?' / heating':'')+'.','Co²⁺ indicated',P(H?'#f472b6':'#7ea2e6')],
@@ -699,8 +701,8 @@ rule(CG,'NaOH',c=>c.salt&&c.has('NaOH'),c=>{
 rule(CG,'NH₄OH + Na₂HPO₄',c=>c.soln&&c.has('NH4OH')&&c.has('Na2HPO4'),c=>{
   switch(c.C){
     case 'Mg': return c.scr?O('A white crystalline precipitate forms on scratching the sides of the tube with a glass rod.','Presence of Group VI (Mg²⁺)',{ppt:P(WH,'crystalline')})
-                           :O('No immediate precipitate. Scratch the sides of the tube with a dry glass rod.','—',{});
-    case 'Ca': case 'Sr': case 'Ba': return O('A white precipitate is formed.','Group V cations also precipitate here — remove Group V first',{ppt:P(WH)});
+                           :O('No immediate precipitate.','—',{});
+    case 'Ca': case 'Sr': case 'Ba': return O('A white precipitate is formed.','Group V cations also precipitate here',{ppt:P(WH)});
     case 'Al': return O('White gelatinous precipitate.','Group III (Al³⁺) present',{ppt:P(WH,'gel')});
     case 'Zn': case 'Pb': return O('A white precipitate is formed.',c.C==='Zn'?'Zn²⁺ (Group IV) present':'Pb²⁺ (Group I) not removed',{ppt:P(WH)});
     case 'Cu': return O('Deep blue solution; no precipitate.','Cu²⁺ (Group II) present',{liquid:DBLUE});
@@ -740,7 +742,7 @@ rule(CG,'NH₄Cl + NH₄OH',c=>c.soln&&c.has('NH4Cl')&&c.has('NH4OH'),c=>{
 rule(CG,'Dil. HCl + (NH₄)₂S',c=>c.soln&&c.has('dilHCl')&&c.has('NH4_2S'),c=>{
   switch(c.C){
     case 'Cu': return O('A black precipitate is formed.','Presence of Group II (Cu²⁺)',{ppt:P(BLK)});
-    case 'Pb': return O('A black precipitate is formed.','Pb²⁺ (Group I) — remove it as PbCl₂ first',{ppt:P(BLK)});
+    case 'Pb': return O('A black precipitate is formed.','Pb²⁺ (Group I) has not been removed',{ppt:P(BLK)});
     default: return O('No characteristic precipitate.','Absence of Group II (Cu²⁺)',{liquid:'#fef9c3'});
   }
 });
@@ -752,10 +754,10 @@ rule(CC,'K₄[Fe(CN)₆]',c=>c.soln&&c.has('K4FeCN6'),c=>{
 rule(CC,'Blue litmus + excess NH₄OH',c=>c.salt&&c.has('litmusSoln')&&c.has('NH4OH'),c=>c.C==='Al'
   ?O('The blue colour is adsorbed on a white gelatinous precipitate, which floats in the solution as a blue lake.','Presence of Al³⁺ is confirmed',{lake:'#3b5bdb',liquid:'#dbe4ff'})
   :O('The solution simply turns blue; no lake is formed.','Absence of Al³⁺',{liquid:'#6b8cff'}));
-rule(CC,'Blue litmus solution',c=>c.salt&&c.has('litmusSoln'),c=>O('The solution is red (acidic). Add NH₄OH in excess.','—',{liquid:'#f87171'}));
+rule(CC,'Blue litmus solution',c=>c.salt&&c.has('litmusSoln'),c=>O('The solution turns red (acidic).','—',{liquid:'#f87171'}));
 rule(CC,'NH₄OH + dimethyl glyoxime',c=>c.soln&&c.has('DMG'),c=>{
   if(c.C==='Ni') return c.has('NH4OH')?O('A bright rose red precipitate is formed.','Presence of Ni²⁺ is confirmed',{ppt:P(ROSE),liquid:'#fecdd3'})
-                                      :O('Slight colour only. Add a few drops of NH₄OH.','—',{});
+                                      :O('A slight colour change only.','—',{});
   if(c.C==='Co') return O('Brown solution; no red precipitate.','Absence of Ni²⁺',{liquid:'#b45309'});
   return O('No red precipitate.','Absence of Ni²⁺',{});
 });
@@ -764,7 +766,7 @@ rule(CC,'Nessler’s reagent',c=>c.soln&&c.has('Nessler'),c=>c.C==='NH4'
   :O('No reddish brown precipitate.','Absence of NH₄⁺',{liquid:'#fef3c7'}));
 rule(CC,'Ammonium oxalate',c=>c.soln&&c.has('NH4Ox'),c=>{
   switch(c.C){
-    case 'Ca': return O('A white precipitate is formed.'+(c.has('NH4OH')?'':' Add a few drops of NH₄OH.'),'Presence of Ca²⁺ is confirmed',{ppt:P(WH,'crystalline')});
+    case 'Ca': return O('A white precipitate is formed.','Presence of Ca²⁺ is confirmed',{ppt:P(WH,'crystalline')});
     case 'Sr': case 'Ba': return O('A white precipitate is formed.',c.C+'²⁺ also gives an oxalate ppt — confirm by the flame test',{ppt:P(WH)});
     case 'Pb': case 'Zn': return O('A white precipitate is formed.',c.C+'²⁺ oxalate — not a Group V ion',{ppt:P(WH)});
     default: return O('No precipitate.','Absence of Ca²⁺',{});
@@ -774,13 +776,13 @@ rule(CC,'NH₄OH',c=>c.soln&&c.has('NH4OH'),c=>{
   const ex=c.n('NH4OH')>1;
   switch(c.C){
     case 'Cu': return ex?O('A deep blue solution is formed.','Presence of Cu²⁺ is confirmed',{liquid:DBLUE})
-                        :O('A pale blue precipitate is formed. Add NH₄OH in excess.','Cu²⁺ indicated',{ppt:P(PBLUE)});
+                        :O('A pale blue precipitate is formed.','Cu²⁺ indicated',{ppt:P(PBLUE)});
     case 'Al': return O('A white gelatinous precipitate, insoluble in excess NH₄OH.','Al³⁺ indicated',{ppt:P(WH,'gel')});
-    case 'Zn': return ex?O('The white precipitate dissolves in excess NH₄OH.','Zn²⁺ indicated',{}):O('A white precipitate is formed. Add excess NH₄OH.','—',{ppt:P(WH)});
+    case 'Zn': return ex?O('The white precipitate dissolves in excess NH₄OH.','Zn²⁺ indicated',{}):O('A white precipitate is formed.','—',{ppt:P(WH)});
     case 'Ni': return ex?O('The green precipitate dissolves giving a blue solution.','Ni²⁺ indicated',{liquid:'#93c5fd'}):O('Green precipitate is formed.','Ni²⁺ indicated',{ppt:P(GRN)});
     case 'Co': return ex?O('Yellowish brown solution.','Co²⁺ indicated',{liquid:'#d4a373'}):O('Blue precipitate is formed.','Co²⁺ indicated',{ppt:P('#7ea2e6')});
     case 'Mn': return O('White precipitate that turns brown on standing.','Mn²⁺ indicated',{ppt:P(BRNW)});
-    case 'Mg': return O('A partial white precipitate is formed.','Mg²⁺ indicated — add NH₄Cl before NH₄OH in group analysis',{ppt:P(WH)});
+    case 'Mg': return O('A partial white precipitate is formed.','Mg²⁺ indicated',{ppt:P(WH)});
     case 'Pb': return O('A white precipitate is formed.','Pb²⁺ indicated',{ppt:P(WH)});
     default: return O('No characteristic change.','—',{});
   }
@@ -815,9 +817,9 @@ rule(CC,'Acetic acid + KNO₂',c=>c.soln&&c.has('KNO2')&&c.has('aceticAcid'),c=>
 rule(CC,'Ether + NH₄SCN',c=>c.soln&&c.has('ether')&&c.has('NH4SCN'),c=>c.C==='Co'
   ?O('A blue colour appears in the ether layer.','Presence of Co²⁺ is confirmed',{layer:'#3b82f6'})
   :O('The ether layer remains colourless.','Absence of Co²⁺',{layer:'#f8fafc'}));
-rule(CC,'Ether added',c=>c.soln&&c.has('ether'),c=>O('Ether forms a separate upper layer. Add a crystal of NH₄SCN and shake.','—',{layer:'#f8fafc'}));
-rule(PH,'Ash test (preparation)',c=>c.has('salt')&&c.has('concHNO3')&&c.has('CoNO3'),c=>O('Salt treated with conc. HNO₃ and cobalt nitrate solution. Dip a filter paper in it and show the paper to the flame.','—',{liquid:'#f9a8d4'}));
-rule(PH,'Ash test (preparation)',c=>c.has('salt')&&(c.has('concHNO3')||c.has('CoNO3')),c=>O('Add '+(c.has('CoNO3')?'3 drops of conc. HNO₃':'a few drops of Co(NO₃)₂ solution')+' to complete the ash-test mixture.','—',{liquid:c.has('CoNO3')?'#f9a8d4':'#fff7c2'}));
+rule(CC,'Ether added',c=>c.soln&&c.has('ether'),c=>O('The ether forms a separate colourless layer above the solution.','—',{layer:'#f8fafc'}));
+rule(PH,'Ash test (preparation)',c=>c.has('salt')&&c.has('concHNO3')&&c.has('CoNO3'),c=>O('A pink solution is obtained.','—',{liquid:'#f9a8d4'}));
+rule(PH,'Ash test (preparation)',c=>c.has('salt')&&(c.has('concHNO3')||c.has('CoNO3')),c=>O(c.has('CoNO3')?'The salt is wetted by the pink cobalt nitrate solution.':'The salt dissolves in the acid.','—',{liquid:c.has('CoNO3')?'#f9a8d4':'#fff7c2'}));
 rule(PH,'Solubility',c=>c.has('salt')&&c.has('water'),c=>O('The salt dissolves in water giving a '+(CATIONS[c.C].color?CATIONS[c.C].color.toLowerCase():'colourless')+' solution.','Water-soluble salt',{}));
 rule(PH,'Dry heating',c=>c.has('salt')&&!c.soln&&c.liquids===0&&c.H,c=>{
   if(c.C==='NH4') return O('White fumes / sublimate with the smell of ammonia; the salt volatilises.','NH₄⁺ might be present',{},{gas:'NH3',smell:'Ammoniacal smell'});
@@ -840,6 +842,25 @@ const VESSELS={
 const freshState=()=>({items:[],heated:false,scratched:false,soaked:false,gas:null,smell:null});
 for(const v of Object.values(VESSELS)) v.st=freshState();
 let salt=SALTS[0],active='tube',lastEntry=null,notebook=[],selectedTest=null;
+// Every tool is a real object you keep: it carries what you dipped it in and any
+// colour change, until you wipe it clean for a fresh one.
+let tools={};
+const T=id=>tools[id]||(tools[id]={items:[],colour:null,note:null});
+const DIPPABLE=new Set(['rodDry','rodHCl','rodNH4OH','filterPaper','redLitmus','blueLitmus']);
+const ACIDS=new Set(['dilH2SO4','concH2SO4','dilHCl','concHCl','concHNO3','aceticAcid']);
+const BASES=new Set(['NaOH','NH4OH','NH4_2CO3']);
+const describeLoad=t=>{ const seen=[],c={}; t.items.forEach(x=>{ if(!c[x]){c[x]=1;seen.push(x);} }); return seen.map(label).join(' + '); };
+// acid or base, including hydrolysis of the salt itself
+function acidity(v){
+  const it=v.st.items;
+  if(it.some(x=>ACIDS.has(x))) return 'acid';
+  if(it.some(x=>BASES.has(x))) return 'base';
+  if(it.includes('saltSoln')||(it.includes('salt')&&it.includes('water'))){
+    if(salt.a==='CO3'||salt.a==='Ac') return 'base';
+    if(['Al','Zn','Cu','Pb','Mn','Ni','Co','Mg','NH4'].includes(salt.c)) return 'acid';
+  }
+  return 'neutral';
+}
 let showInf=false,sfxOn=false,pool=new Set(SALTS.map((_,i)=>i));   // both toggles default off
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 
@@ -1000,6 +1021,11 @@ function renderContents(){
   let h=`<span class="lbl active">${v.Name}:</span>`;
   h+=st.items.length?seen.map(x=>`<span class="ctag">${esc(label(x))}${cnt[x]>1?' ×'+cnt[x]:''}</span>`).join(''):'<span class="ctag dim">empty</span>';
   if(st.heated) h+='<span class="ctag hot">heated</span>'; if(st.scratched) h+='<span class="ctag">scratched</span>'; if(st.soaked) h+='<span class="ctag hot">paper soaked</span>';
+  // every tool that is carrying something, click to get a fresh clean one
+  for(const [tid,t] of Object.entries(tools)){
+    if(!t.items.length&&!t.colour) continue;
+    h+=`<span class="ctag rodtag" data-tool="${tid}" title="Click for a fresh, clean one">${esc(label(tid))}${t.items.length?': '+esc(describeLoad(t)):' (used)'}</span>`;
+  }
   const [oid,ov]=other,n=ov.st.items.length;
   const bar=$('#contentsBar');
   bar.innerHTML=`<div class="chips">${h}</div><div class="tools">`
@@ -1007,6 +1033,10 @@ function renderContents(){
     +`<button id="btnHeat">🔥 Heat</button><button id="btnWash">💧 Wash</button></div>`;
   $('#btnHeat').onclick=()=>heat(active); $('#btnWash').onclick=()=>wash(active);
   bar.querySelector('.switch').onclick=()=>refresh(oid);
+  bar.querySelectorAll('.rodtag').forEach(el=>el.onclick=()=>{
+    delete tools[el.dataset.tool];
+    renderShelf(currentCat); renderContents(); toast('A fresh '+label(el.dataset.tool)+'.');
+  });
 }
 
 /* ---- icons ---- */
@@ -1014,12 +1044,12 @@ function icon(it){
   const col=it.col||'#e6eef8', id='c'+it.id+Math.random().toString(36).slice(2,6);
   if(it.tool){
     switch(it.tool){
-      case 'rod': { const tip=it.id==='rodHCl'?'#f1f5f9':it.id==='rodNH4OH'?'#dbeafe':'none'; return `<svg viewBox="0 0 48 64"><line x1="8" y1="58" x2="40" y2="8" stroke="#cbd5e1" stroke-width="5" stroke-linecap="round"/><line x1="8" y1="58" x2="40" y2="8" stroke="#fff" stroke-width="1.5" stroke-linecap="round" opacity=".7"/>${tip!=='none'?`<circle cx="9" cy="56" r="5" fill="${tip}" stroke="#94a3b8"/>`:''}</svg>`; }
-      case 'litmus': return `<svg viewBox="0 0 48 64"><rect x="17" y="4" width="14" height="56" rx="2" fill="${col}"/><rect x="17" y="4" width="14" height="10" rx="2" fill="#fff" opacity=".6"/></svg>`;
+      case 'rod': { const st=tools[it.id],tip=st&&st.items.length?(salt.hex||'#e9d5a1'):(it.id==='rodHCl'?'#f1f5f9':it.id==='rodNH4OH'?'#dbeafe':'none'); return `<svg viewBox="0 0 48 64"><line x1="8" y1="58" x2="40" y2="8" stroke="#cbd5e1" stroke-width="5" stroke-linecap="round"/><line x1="8" y1="58" x2="40" y2="8" stroke="#fff" stroke-width="1.5" stroke-linecap="round" opacity=".7"/>${tip!=='none'?`<circle cx="9" cy="56" r="${st&&st.items.length?6.5:5}" fill="${tip}" stroke="#94a3b8"/>`:''}</svg>`; }
+      case 'litmus': { const st=tools[it.id],c2=(st&&st.colour)||col; return `<svg viewBox="0 0 48 64"><rect x="17" y="4" width="14" height="56" rx="2" fill="${c2}"/><rect x="17" y="4" width="14" height="10" rx="2" fill="#fff" opacity=".6"/>${st&&st.colour&&st.colour!==col?'<circle cx="38" cy="10" r="5" fill="#fff" stroke="#94a3b8"/><text x="38" y="13" font-size="7" text-anchor="middle" fill="#334155">✓</text>':''}</svg>`; }
       case 'lime': return `<svg viewBox="0 0 48 64"><path d="M16 6h16v44a8 8 0 0 1-16 0z" fill="#f8fafc" stroke="#94a3b8" stroke-width="2"/><path d="M17 28h14v22a7 7 0 0 1-14 0z" fill="#e0f2fe"/><rect x="13" y="3" width="22" height="5" rx="2" fill="#94a3b8"/></svg>`;
       case 'ball': return `<svg viewBox="0 0 48 64"><circle cx="24" cy="34" r="16" fill="#fef3c7" stroke="#d6b676" stroke-width="2"/><path d="M14 30l8 6-4 8m12-16l-6 8 8 4" stroke="#d6b676" stroke-width="1.5" fill="none"/></svg>`;
       case 'copper': return `<svg viewBox="0 0 48 64"><g fill="#d97706" stroke="#92400e" stroke-width="1"><path d="M10 40l10-8 4 6-10 8z"/><path d="M22 26l12-4 2 6-12 5z"/><path d="M20 46l14-6 3 5-13 7z"/><path d="M8 26l8-2 2 5-8 3z"/></g></svg>`;
-      case 'paper': return `<svg viewBox="0 0 48 64"><circle cx="24" cy="32" r="19" fill="#fff" stroke="#cbd5e1" stroke-width="2"/><path d="M24 13v38M5 32h38" stroke="#e2e8f0"/></svg>`;
+      case 'paper': { const st=tools[it.id],wet=st&&st.items.length; return `<svg viewBox="0 0 48 64"><circle cx="24" cy="32" r="19" fill="${wet?(st.colour||'#e9d5a1'):'#fff'}" stroke="${wet?'#b45309':'#cbd5e1'}" stroke-width="2"/><path d="M24 13v38M5 32h38" stroke="${wet?'#d6bb8a':'#e2e8f0'}"/></svg>`; }
     }
   }
   if(it.solid) return `<svg viewBox="0 0 48 64"><rect x="10" y="14" width="28" height="46" rx="6" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5"/><rect x="7" y="7" width="34" height="9" rx="3" fill="#475569"/><path d="M12 46q6-9 12-3q6-7 12 3v12H12z" fill="${it.col||'#e5e7eb'}" stroke="#94a3b8" stroke-width=".8"/><rect x="14" y="26" width="20" height="10" rx="2" fill="#fff" stroke="#cbd5e1"/></svg>`;
@@ -1146,15 +1176,24 @@ function wash(vid){
   const v=VESSELS[vid]; sfx('wash'); v.st=freshState(); v.pptKey=''; v.gasKey=''; v.sfxKey=''; refresh(vid);
   showObs({test:v.Name,sec:'',exp:'Empty '+v.name,obs:'The '+v.name+' is washed and ready.',inf:'—'});
 }
-function scratch(vid){
-  const v=VESSELS[vid];
-  if(!v.st.items.length){ toast('The '+v.name+' is empty.'); return; }
-  v.st.scratched=true; refresh(vid); toast('Sides of the '+v.name+' scratched with the glass rod.');
-}
-function soakPaper(vid){
-  const v=VESSELS[vid],has=id=>v.st.items.includes(id);
-  if(has('salt')&&has('concHNO3')&&has('CoNO3')){ v.st.soaked=true; active=vid; renderContents(); toast('Filter paper soaked in the mixture. Now drag it on to the burner.'); }
-  else toast('There is nothing in the vessel to soak into the paper.');
+// Dip any tool into a vessel: it keeps what it picked up, and litmus keeps its new colour.
+function dipTool(vid,id){
+  const v=VESSELS[vid],t=T(id),it=ITEM[id];
+  if(!v.st.items.length){ toast('The '+v.name+' is empty — there is nothing to pick up.'); return; }
+  t.items=[...v.st.items];
+  if(id==='rodDry') v.st.scratched=true;          // the Mg²⁺ test needs the sides scratched
+  let obs=null,inf='—';
+  if(id==='redLitmus'||id==='blueLitmus'){
+    // litmus is reversible: it goes by the paper's current colour, not the one it started as
+    const a=acidity(v),cur=t.colour||ITEM[id].col;
+    const next=a==='acid'?'#ef4444':a==='base'?'#3b82f6':cur,nm=c=>c==='#ef4444'?'red':'blue';
+    t.colour=next;
+    obs=next!==cur?`The ${nm(cur)} litmus paper turns ${nm(next)}.`:'No change in the litmus paper.';
+    inf=a==='acid'?'The solution is acidic':a==='base'?'The solution is alkaline':'The solution is neutral to litmus';
+  } else if(id==='filterPaper') t.colour='#e9d5a1';
+  active=vid; refresh(vid); renderShelf(currentCat); renderContents();
+  if(obs) showObs({sec:AP,test:it.label,exp:describeContents(v)+' — '+it.label+' dipped in the solution',obs,inf,recordable:true});
+  else toast(it.label+' now carries '+describeLoad(t)+'.');
 }
 function probe(vid,id){
   const v=VESSELS[vid];
@@ -1176,27 +1215,60 @@ function probe(vid,id){
   pr.style.left=(wr.left-bm.left+wr.width*(vid==='tube'?.55:.45))+'px'; pr.style.top=(wr.top-bm.top-(vid==='tube'?10:60))+'px';
   pr.innerHTML=html; pr.classList.add('show'); setTimeout(()=>pr.classList.remove('show'),3200);
   if(pos&&id.startsWith('rod')){ renderGas(v,'white'); setTimeout(()=>renderGas(v,gasKind(v.st.gas)),3000); }
-  active=vid; renderContents();
+  // the tool keeps the change: litmus that turned stays turned, lime water stays milky
+  const t=T(id);
+  if(pos&&id==='redLitmus') t.colour='#3b82f6';
+  if(pos&&id==='blueLitmus') t.colour='#ef4444';
+  if(pos&&id==='limeWater') t.colour='#f1f5f9';
+  active=vid; renderShelf(currentCat); renderContents();
   const nm=it.label.replace(/^Moist /,'m');
   showObs({sec:id==='rodHCl'?CC:(id==='redLitmus'?CG:AP),test:nm[0].toUpperCase()+nm.slice(1),exp,obs,inf,recordable:true});
 }
-function flameTest(){
+// Burn whatever is on the rod. A colour needs the salt AND an acid to make the
+// volatile chloride — salt alone only flickers, which is what happens at the bench.
+function flameTest(rid){
   sfx('flame');
-  const f=FLAME[salt.c]||FLAME.none,b=$('#burner');
-  b.style.setProperty('--flame',f.hex||'#60a5fa');
-  $('#rodOverlay').innerHTML=`<svg viewBox="0 0 120 150"><line x1="112" y1="8" x2="60" y2="88" stroke="#cbd5e1" stroke-width="6" stroke-linecap="round"/><circle cx="60" cy="88" r="6" fill="${salt.hex||'#f1f5f9'}" stroke="#94a3b8"/></svg>`;
+  const t=T(rid||'rodDry'),has=id=>t.items.includes(id);
+  const hasSalt=has('salt')||has('saltSoln'),conc=has('concHCl'),dil=has('dilHCl')||has('concHNO3');
+  const f=FLAME[salt.c]||FLAME.none;
+  let obs,inf,hex=null,exp;
+  if(!t.items.length){
+    exp='A clean glass rod is introduced into the non-luminous flame';
+    obs='The clean rod gives no colour to the flame.'; inf='—';
+  } else {
+    exp='Rod coated with '+describeLoad(t)+', introduced into the non-luminous Bunsen flame';
+    if(!hasSalt){ obs='No characteristic colouration — there is no salt on the rod.'; inf='—'; }
+    else if(conc||dil){
+      hex=f.hex;
+      obs=f.obs+(!conc&&dil?' The colour is weak; conc. HCl gives a cleaner flame.':'');
+      inf=f.inf;
+    } else if(f.hex){                       // salt alone: chloride never forms
+      hex=f.hex;
+      obs='Only a brief, faint tinge of colour that dies away at once.';
+      inf='Not conclusive — the volatile chloride has not been formed';
+    } else { obs=f.obs; inf=f.inf; }
+  }
+  const b=$('#burner');
+  b.style.setProperty('--flame',hex||'#60a5fa');
+  $('#rodOverlay').innerHTML=`<svg viewBox="0 0 120 150"><line x1="112" y1="8" x2="60" y2="88" stroke="#cbd5e1" stroke-width="6" stroke-linecap="round"/>${t.items.length?`<circle cx="60" cy="88" r="6" fill="${hex||salt.hex||'#f1f5f9'}" stroke="#94a3b8"/>`:''}</svg>`;
   $('#rodOverlay').classList.add('show');
   setTimeout(()=>{ $('#rodOverlay').classList.remove('show'); b.style.setProperty('--flame','#60a5fa'); },4500);
-  showObs({sec:PH,test:'Flame test',exp:'Glass rod dipped in conc. HCl and then in the salt, introduced into the non-luminous Bunsen flame',obs:f.obs,inf:f.inf,swatch:f.hex||'#93c5fd',recordable:true});
+  t.items=[]; t.colour=null;                // the coating burns off
+  renderShelf(currentCat); renderContents();
+  showObs({sec:PH,test:'Flame test',exp,obs,inf,swatch:hex,recordable:true});
 }
 function ashTest(){
-  const v=Object.values(VESSELS).find(v=>v.st.soaked);
-  if(!v){ toast('The paper is dry — dip it in a prepared mixture before burning it.'); showObs({sec:PH,test:'Ash test',exp:'Dry filter paper shown to the flame',obs:'The dry paper simply burns away.',inf:'—'}); return; }
+  const t=T('filterPaper'),has=id=>t.items.includes(id);
+  if(!has('salt')||!has('concHNO3')||!has('CoNO3')){
+    showObs({sec:PH,test:'Ash test',exp:(t.items.length?'Filter paper carrying '+describeLoad(t):'A dry filter paper')+' burnt in the flame',
+      obs:t.items.length?'The paper burns away leaving an ordinary black ash.':'The dry paper simply burns away.',inf:'—'});
+    t.items=[]; t.colour=null; renderShelf(currentCat); renderContents(); return;
+  }
   const a=ASH[salt.c]||ASH.none;
   $('#rodOverlay').innerHTML=`<svg viewBox="0 0 120 150"><circle cx="60" cy="70" r="26" fill="#fff" stroke="#cbd5e1" stroke-width="2"><animate attributeName="fill" to="${a.hex}" dur="2s" begin="0.8s" fill="freeze"/><animate attributeName="r" to="18" dur="2s" begin="0.8s" fill="freeze"/></circle><path d="M40 60q10-18 22-6q6-14 20 4" fill="none" stroke="#f97316" stroke-width="3" opacity=".9"><animate attributeName="opacity" to="0" dur="2s" begin="1s" fill="freeze"/></path></svg>`;
   $('#rodOverlay').classList.add('show'); setTimeout(()=>$('#rodOverlay').classList.remove('show'),4500);
-  v.st.soaked=false; renderContents();
-  showObs({sec:PH,test:'Ash test',exp:'Salt + conc. HNO₃ + Co(NO₃)₂ — filter paper dipped and burnt in the flame',obs:a.obs,inf:a.inf,swatch:a.hex,recordable:true});
+  t.items=[]; t.colour=null; renderShelf(currentCat); renderContents();
+  showObs({sec:PH,test:'Ash test',exp:'Filter paper carrying salt + conc. HNO₃ + Co(NO₃)₂, burnt in the flame',obs:a.obs,inf:a.inf,swatch:a.hex,recordable:true});
 }
 function observeSalt(){
   const cat=CATIONS[salt.c],col=salt.color||cat.color;
@@ -1211,16 +1283,22 @@ function smellSalt(){
 function handleDrop(id,zone){
   if(VESSELS[zone]){
     if(VESSELS[id]) return id===zone?null:pour(id,zone);
+    // gas coming off → hold it at the mouth; otherwise dip it in
+    if(PROBES.has(id)&&(VESSELS[zone].st.gas||id==='limeWater')) return probe(zone,id);
+    if(DIPPABLE.has(id)) return dipTool(zone,id);
     if(PROBES.has(id)) return probe(zone,id);
-    if(id==='rodDry') return scratch(zone);
-    if(id==='filterPaper') return soakPaper(zone);
     return addTo(zone,id);
   }
   if(zone==='burner'){
     if(VESSELS[id]) return heat(id);
-    if(id==='rodHCl') return flameTest();
     if(id==='filterPaper') return ashTest();
-    if(id==='rodNH4OH'||id==='rodDry') return toast('Nothing to observe — use this rod at the mouth of the vessel.');
+    if(id==='rodDry'||id==='rodHCl'||id==='rodNH4OH'){
+      const t=T(id);
+      // a pre-wetted rod taken straight to the flame carries only its own reagent
+      if(!t.items.length&&id!=='rodDry') t.items=[id==='rodHCl'?'concHCl':'NH4OH'];
+      return flameTest(id);
+    }
+    if(id==='redLitmus'||id==='blueLitmus'){ const t=T(id); t.items=[]; t.colour=null; renderShelf(currentCat); renderContents(); return toast('The paper chars in the flame. Take a fresh one.'); }
     return toast('Only a vessel, the glass rod or the filter paper go to the flame.');
   }
   if(zone==='sink'){
@@ -1283,7 +1361,8 @@ function startGhost(){
 }
 function clickItem(id){
   if(VESSELS[id]) return toast('Drag the '+VESSELS[id].name+' on to the burner to heat it, on to the other vessel to pour, or to the sink to wash it.');
-  if(id==='rodHCl') return toast('Drag the rod into the flame, or to the mouth of a vessel to test the gas evolved.');
+  if(id==='rodHCl') return toast('Drag this rod to the mouth of a vessel to test the gas evolved.');
+  if(id==='rodDry') return toast('Drag the rod on to a vessel to coat it, then into the flame for the flame test.');
   handleDrop(id,active);
 }
 
