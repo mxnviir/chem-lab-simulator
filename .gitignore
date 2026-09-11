@@ -1,0 +1,8 @@
+# Source course material — kept local, not published
+*.docx
+*.pdf
+
+.claude/
+.vercel/
+.DS_Store
+Thumbs.db
