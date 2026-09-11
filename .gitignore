@@ -6,3 +6,7 @@
 .vercel/
 .DS_Store
 Thumbs.db
+
+# scratch
+_deploy_payload.json
+*_msg.txt
