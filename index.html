@@ -129,6 +129,16 @@ main{display:grid;grid-template-columns:300px 1fr 390px;height:calc(100vh - 60px
 .side-tabs button{flex:1;border:0;border-radius:0;background:transparent;padding:10px;font-weight:600;color:var(--muted);border-bottom:2px solid transparent}
 .side-tabs button.active{color:var(--accent);border-bottom-color:var(--accent)}
 .side-body{overflow:auto;flex:1;min-height:0}
+/* rough notebook */
+.rough{display:flex;flex-direction:column;height:100%;min-height:320px;padding:10px 12px 8px}
+#roughText{flex:1;width:100%;min-height:240px;resize:none;font:13px/1.6 'Segoe UI',system-ui,sans-serif;color:var(--ink);
+  padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:
+  repeating-linear-gradient(180deg,transparent,transparent 24px,#eef2f7 24px,#eef2f7 25px) 0 6px/100% 25px,#fffdf7}
+#roughText:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,.15)}
+#roughText::placeholder{color:#9aa5b4}
+.rough-foot{display:flex;align-items:center;gap:8px;padding-top:8px;font-size:11px;color:var(--muted)}
+.rough-foot .sp{flex:1}
+.rough-foot button{padding:4px 10px;font-size:12px;border-radius:8px}
 .guide details{border-bottom:1px solid var(--line)}
 .guide summary{padding:10px 14px;font-weight:700;cursor:pointer;font-size:13px;list-style:none;display:flex;align-items:center;gap:8px}
 .guide summary::-webkit-details-marker{display:none}
@@ -214,7 +224,7 @@ main{display:grid;grid-template-columns:300px 1fr 390px;height:calc(100vh - 60px
 </head>
 <body>
 <header>
-  <div class="brand"><div class="logo">⚗</div><div>ChemLab<small>Qualitative analysis of a simple salt · CBSE Class XI · <span class="ver">build 5</span></small></div></div>
+  <div class="brand"><div class="logo">⚗</div><div>ChemLab<small>Qualitative analysis of a simple salt · CBSE Class XI · <span class="ver">build 6</span></small></div></div>
   <div class="salt-tag" id="saltTag">Unknown salt</div>
   <div class="actions">
     <label class="tg" title="Show the inference for each observation. Off = work it out yourself."><input type="checkbox" id="tgInf"><span class="tg-track"></span><span class="tg-lbl">Inferences</span></label>
@@ -346,10 +356,19 @@ main{display:grid;grid-template-columns:300px 1fr 390px;height:calc(100vh - 60px
       <div class="row"><b>Inference</b><div class="inf" id="obsInf">—</div></div>
       <div class="foot"><button id="btnRecord" disabled>＋ Record in notebook</button></div>
     </div>
-    <div class="side-tabs"><button class="active" data-side="guide">Procedure guide</button><button data-side="nb">Notebook <span id="nbCount" class="badge" style="margin-left:4px">0</span></button></div>
+    <div class="side-tabs"><button class="active" data-side="guide">Procedure</button><button data-side="nb">Notebook <span id="nbCount" class="badge" style="margin-left:4px">0</span></button><button data-side="rough">Rough</button></div>
     <div class="side-body">
       <div class="guide" id="guide"></div>
       <div class="nb" id="nb" style="display:none"></div>
+      <div class="rough" id="rough" style="display:none">
+        <textarea id="roughText" spellcheck="false" placeholder="Rough work — jot down what you think each result means, which groups you have ruled out, anything you want to remember.
+
+e.g.
+no gas with dil. H2SO4 -> not carbonate
+white ppt with BaCl2, stays in HCl -> sulphate?
+flame: no colour -> NH4 / Al / Mg"></textarea>
+        <div class="rough-foot"><span id="roughCount"></span><span class="sp"></span><button id="btnRoughClear">Clear</button></div>
+      </div>
     </div>
   </aside>
 </main>
@@ -1136,9 +1155,11 @@ function drawSalt(avoid){
 }
 // Only the settings persist. The salt is never restored — reloading gives a fresh
 // unknown, and a notebook from the previous salt would not belong to it.
-function save(){ try{ localStorage.setItem('chemlab',JSON.stringify({inf:showInf,sfx:sfxOn,pool:[...pool],last:SALTS.indexOf(salt)})); }catch(e){} }
+function save(){ try{ const r=document.getElementById('roughText');
+  localStorage.setItem('chemlab',JSON.stringify({inf:showInf,sfx:sfxOn,pool:[...pool],last:SALTS.indexOf(salt),rough:r?r.value:''})); }catch(e){} }
 function load(){ try{ const d=JSON.parse(localStorage.getItem('chemlab')); if(d){
   showInf=!!d.inf; sfxOn=!!d.sfx;
+  if(typeof d.rough==='string'){ const r=document.getElementById('roughText'); if(r) r.value=d.rough; }
   if(Array.isArray(d.pool)&&d.pool.length) pool=new Set(d.pool.filter(i=>SALTS[i]));
   return SALTS[d.last]||null; } }catch(e){} return null; }
 
@@ -1371,7 +1392,23 @@ function clickItem(id){
    ========================================================= */
 let currentCat='acid';
 $('#shelfTabs').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; $$('#shelfTabs button').forEach(x=>x.classList.toggle('active',x===b)); currentCat=b.dataset.cat; renderShelf(currentCat); });
-$('.side-tabs').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; $$('.side-tabs button').forEach(x=>x.classList.toggle('active',x===b)); $('#guide').style.display=b.dataset.side==='guide'?'':'none'; $('#nb').style.display=b.dataset.side==='nb'?'':'none'; });
+$('.side-tabs').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  $$('.side-tabs button').forEach(x=>x.classList.toggle('active',x===b));
+  ['guide','nb','rough'].forEach(p=>$('#'+p).style.display=b.dataset.side===p?'':'none');
+  if(b.dataset.side==='rough') $('#roughText').focus();
+});
+// rough notebook — free typing, saved as you go
+let roughSaveT;
+function roughCount(){
+  const v=$('#roughText').value.trim();
+  $('#roughCount').textContent=v?v.split(/\n/).length+' line'+(v.split(/\n/).length>1?'s':'')+' · saved':'empty';
+}
+$('#roughText').oninput=()=>{ roughCount(); clearTimeout(roughSaveT); roughSaveT=setTimeout(save,400); };
+$('#btnRoughClear').onclick=()=>{
+  if($('#roughText').value&&!confirm('Clear the rough notes?')) return;
+  $('#roughText').value=''; roughCount(); save();
+};
 $('#guide').addEventListener('click',e=>{ const t=e.target.closest('.test'); if(!t) return; const test=GUIDE[t.dataset.si].tests[t.dataset.ti]; selectTest(selectedTest===test?null:test); });
 $('#btnObserve').onclick=observeSalt; $('#btnSmell').onclick=smellSalt;
 $('#btnRecord').onclick=()=>{ if(!lastEntry) return; notebook.push({sec:lastEntry.sec||(selectedTest?GUIDE.find(s=>s.tests.includes(selectedTest)).sec:''),test:lastEntry.test,exp:lastEntry.exp,obs:lastEntry.obs,inf:lastEntry.inf,smell:lastEntry.smell||null}); renderNotebook(); save(); toast('Recorded in the notebook.'); $('#btnRecord').disabled=true; };
@@ -1382,6 +1419,8 @@ function printRecord(){
   // inferences hidden → print the column blank so it can be filled in by hand
   notebook.forEach((e,i)=>{ if(e.sec!==last){ html+=`<tr class="sec"><td colspan="4">${esc(e.sec||'Other observations')}</td></tr>`; last=e.sec; } html+=`<tr><td>${i+1}</td><td><b>${esc(e.test)}</b><br>${esc(e.exp)}</td><td>${esc(e.obs)}</td><td>${showInf?esc(e.inf):'&nbsp;'}</td></tr>`; });
   html+='</table>'; if(reported) html+=`<p><b>Result:</b> ${reported}</p>`;
+  const rough=$('#roughText').value.trim();
+  if(rough) html+=`<h3 style="margin:18px 0 6px">Rough work</h3><pre style="white-space:pre-wrap;font:12px/1.6 Calibri,Arial,sans-serif;border:1px solid #000;padding:8px;margin:0">${esc(rough)}</pre>`;
   $('#printArea').innerHTML=html; window.print();
 }
 let reported='';
@@ -1423,7 +1462,7 @@ $('#selCation').innerHTML=Object.entries(CATIONS).map(([k,v])=>`<option value="$
 const prevSalt=load();          // settings only; the unknown is drawn fresh every load
 salt=drawSalt(prevSalt);
 save();                         // record it now, so the next load avoids repeating it
-applySettings(); renderSaltList();
+applySettings(); renderSaltList(); roughCount();
 renderShelf('acid'); renderGuide(); renderDish(); renderNotebook(); refresh('beaker',true); refresh('tube');
 showObs({test:'Welcome',sec:'',exp:'An unknown simple salt is given. Identify its anion and cation.',obs:'Choose a test in the procedure guide → drag the needed reagents on to the test tube (or beaker) → read the observation here → record it.',inf:'—'});
 // make the fresh draw visible, so a chance repeat is not mistaken for a stuck salt

@@ -1,0 +1,10 @@
+Add a rough notebook for free typing
+
+A third tab beside the procedure and the notebook, with a plain ruled
+textarea for working things out: what a result rules out, which groups are
+gone, anything worth remembering. It saves as you type and survives a
+reload, unlike the structured notebook, since typed notes are the one thing
+that must not disappear. Printing the record appends the rough work at the
+end.
+
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
