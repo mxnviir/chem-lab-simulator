@@ -135,7 +135,6 @@ main{display:grid;grid-template-columns:300px 1fr 390px;height:calc(100vh - 60px
   padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:
   repeating-linear-gradient(180deg,transparent,transparent 24px,#eef2f7 24px,#eef2f7 25px) 0 6px/100% 25px,#fffdf7}
 #roughText:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,.15)}
-#roughText::placeholder{color:#9aa5b4}
 .rough-foot{display:flex;align-items:center;gap:8px;padding-top:8px;font-size:11px;color:var(--muted)}
 .rough-foot .sp{flex:1}
 .rough-foot button{padding:4px 10px;font-size:12px;border-radius:8px}
@@ -361,12 +360,7 @@ main{display:grid;grid-template-columns:300px 1fr 390px;height:calc(100vh - 60px
       <div class="guide" id="guide"></div>
       <div class="nb" id="nb" style="display:none"></div>
       <div class="rough" id="rough" style="display:none">
-        <textarea id="roughText" spellcheck="false" placeholder="Rough work — jot down what you think each result means, which groups you have ruled out, anything you want to remember.
-
-e.g.
-no gas with dil. H2SO4 -> not carbonate
-white ppt with BaCl2, stays in HCl -> sulphate?
-flame: no colour -> NH4 / Al / Mg"></textarea>
+        <textarea id="roughText" spellcheck="false"></textarea>
         <div class="rough-foot"><span id="roughCount"></span><span class="sp"></span><button id="btnRoughClear">Clear</button></div>
       </div>
     </div>
