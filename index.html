@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ChemLab · Qualitative Salt Analysis (CBSE XI)</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='l' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%2360a5fa'/%3E%3Cstop offset='1' stop-color='%232563eb'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='%230f172a'/%3E%3Cpath d='M25 10h14v5h-3v17.5l10.5 18A5 5 0 0 1 42 58H22a5 5 0 0 1-4.5-7.5L28 32.5V15h-3z' fill='%23e2e8f0'/%3E%3Cpath d='M23.2 42h17.6l5.7 8.5A5 5 0 0 1 42 58H22a5 5 0 0 1-4.5-7.5z' fill='url(%23l)'/%3E%3Ccircle cx='28' cy='50' r='2.6' fill='%23bfdbfe'/%3E%3Ccircle cx='36' cy='47' r='1.8' fill='%23bfdbfe'/%3E%3Ccircle cx='33' cy='53' r='1.4' fill='%23bfdbfe'/%3E%3C/svg%3E">
 <style>
 :root{
   --bg:#eef2f7;--panel:#fff;--ink:#1f2937;--muted:#6b7280;--line:#e5e7eb;
@@ -40,6 +41,26 @@ header{height:60px;display:flex;align-items:center;gap:18px;padding:0 18px;backg
 .tg input:checked~.tg-lbl{color:var(--accent);font-weight:600}
 button.reveal-inf{padding:3px 10px;font-size:12px;border-radius:8px;border-style:dashed;color:var(--muted)}
 .hide-inf .nb .inf-col{display:none}
+/* mode switch */
+.modesw{display:inline-flex;background:#f1f5f9;border:1px solid var(--line);border-radius:10px;padding:2px;gap:2px}
+.modesw button{border:0;background:transparent;border-radius:8px;padding:5px 11px;font-size:12.5px;font-weight:600;color:var(--muted);box-shadow:none}
+.modesw button:hover{box-shadow:none;color:var(--ink)}
+.modesw button.on{background:#fff;color:var(--accent);box-shadow:0 1px 3px rgba(16,24,40,.12)}
+/* the 3-salt comparison table shown in learning mode */
+.cmp{margin:10px 0 2px;border:1px solid #c7d2fe;border-radius:10px;overflow:hidden;background:#f8faff}
+.cmp h5{margin:0;padding:7px 10px;font-size:11px;text-transform:uppercase;letter-spacing:.3px;color:#1e40af;background:#eef2ff;font-weight:700}
+.cmp table{width:100%;border-collapse:collapse;font-size:11.5px}
+.cmp td{border-top:1px solid #e0e7ff;padding:6px 9px;vertical-align:top;line-height:1.45}
+.cmp td.s{white-space:nowrap;font-weight:700;color:#3730a3;width:1%}
+.cmp td.o{color:#374151}
+.cmp .here{background:#fffbeb}
+/* observation pop-up on the bench */
+.popobs{position:absolute;z-index:12;max-width:270px;background:#fff;border:1px solid var(--line);border-left:4px solid var(--accent);
+  border-radius:10px;box-shadow:0 10px 30px rgba(16,24,40,.18);padding:9px 12px;font-size:12.5px;line-height:1.45;
+  opacity:0;transform:translateY(6px);transition:.22s;pointer-events:none}
+.popobs.show{opacity:1;transform:translateY(0)}
+.popobs b{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.3px;color:var(--muted);margin-bottom:3px}
+.popobs .pi{display:block;margin-top:5px;padding-top:5px;border-top:1px dashed var(--line);font-weight:600;color:var(--ok)}
 /* ---------- layout ---------- */
 main{display:grid;grid-template-columns:300px 1fr 390px;height:calc(100vh - 60px);gap:14px;padding:14px}
 .panel{background:var(--panel);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column;min-height:0}
@@ -111,8 +132,10 @@ main{display:grid;grid-template-columns:300px 1fr 390px;height:calc(100vh - 60px
 .contents-bar .sp{flex:1 0 12px}
 .contents-bar button{padding:5px 10px;font-size:12px}
 .contents-bar .sep{width:1px;height:22px;background:var(--line);margin:0 4px}
-.ctag.rodtag{background:#fef3c7;color:#92400e;cursor:pointer;border:1px solid #fcd34d}
+.ctag.rodtag{background:#fef3c7;color:#92400e;cursor:grab;border:1px solid #fcd34d;display:inline-flex;align-items:center;gap:6px;touch-action:none;user-select:none}
 .ctag.rodtag:hover{background:#fde68a}
+.ctag.rodtag .wipe{border:0;background:rgba(0,0,0,.08);color:#92400e;border-radius:50%;width:16px;height:16px;line-height:1;padding:0;font-size:10px;box-shadow:none}
+.ctag.rodtag .wipe:hover{background:var(--bad);color:#fff;box-shadow:none}
 /* ---------- side ---------- */
 .obs{padding:14px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#fff,#fafbff)}
 .obs .head{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
@@ -178,6 +201,10 @@ main{display:grid;grid-template-columns:300px 1fr 390px;height:calc(100vh - 60px
 .verdict.ok{display:block;background:var(--ok-soft);color:var(--ok)}
 .verdict.bad{display:block;background:#fee2e2;color:var(--bad)}
 .verdict.info{display:block;background:#eef2ff;color:#3730a3}
+.sa1box{display:flex;align-items:center;gap:12px;justify-content:space-between;background:#f5f8ff;border:1px solid #c7d2fe;border-radius:12px;padding:12px 14px;margin-bottom:10px}
+.sa1box b{display:block;font-size:13px}
+.sa1box small{color:var(--muted);font-size:11.5px}
+.sa1box button{flex:0 0 auto}
 /* salt picker / random pool */
 .pool-h{display:flex;align-items:center;gap:8px;margin-top:16px;font-size:12px;color:var(--muted)}
 .pool-h b{color:var(--ink);font-size:13px}
@@ -223,10 +250,12 @@ main{display:grid;grid-template-columns:300px 1fr 390px;height:calc(100vh - 60px
 </head>
 <body>
 <header>
-  <div class="brand"><div class="logo">⚗</div><div>ChemLab<small>Qualitative analysis of a simple salt · CBSE Class XI · <span class="ver">build 7</span></small></div></div>
+  <div class="brand"><div class="logo">⚗</div><div>ChemLab<small>Qualitative analysis of a simple salt · CBSE Class XI · <span class="ver">build 8</span></small></div></div>
   <div class="salt-tag" id="saltTag">Unknown salt</div>
   <div class="actions">
-    <label class="tg" title="Show the inference for each observation. Off = work it out yourself."><input type="checkbox" id="tgInf"><span class="tg-track"></span><span class="tg-lbl">Inferences</span></label>
+    <div class="modesw" id="modeSw" title="Learning shows the procedure, the inferences and how all three salts behave. Test hides them all.">
+      <button data-mode="learn" class="on">📖 Learning</button><button data-mode="test">🎯 Test</button>
+    </div>
     <label class="tg" title="Sound effects — pouring, effervescence, the burner"><input type="checkbox" id="tgSfx"><span class="tg-track"></span><span class="tg-lbl">SFX</span></label>
     <button id="btnNew">New salt</button>
     <button id="btnPrint">Print record</button>
@@ -341,6 +370,7 @@ main{display:grid;grid-template-columns:300px 1fr 390px;height:calc(100vh - 60px
 
       <div class="sink dropzone" data-drop="sink">Sink<br><small>drop a vessel here to wash it</small></div>
       <div class="probe" id="probe"></div>
+      <div class="popobs" id="popObs"></div>
     </div>
 
     <div class="contents-bar" id="contentsBar"></div>
@@ -381,7 +411,11 @@ main{display:grid;grid-template-columns:300px 1fr 390px;height:calc(100vh - 60px
 
 <div class="modal-bg" id="newModal"><div class="modal">
   <h2>New salt</h2><p>Draw a random unknown from the pool you choose, or set one directly. The vessels and notebook are cleared.</p>
-  <button class="primary" id="btnRandom">🎲 Random from pool</button>
+  <div class="sa1box">
+    <div><b>SA1 practical</b><small>Ammonium carbonate · Aluminium sulphate · Lead nitrate</small></div>
+    <button class="primary" id="btnSA1">🎲 Random SA1 salt</button>
+  </div>
+  <button id="btnRandom">🎲 Random from pool</button>
   <div class="pool-h"><b>Random pool</b><span id="poolCount"></span><span class="sp"></span><button id="poolAll">Select all</button><button id="poolNone">None</button></div>
   <input id="saltSearch" class="search" type="search" placeholder="Search by name, formula, ion or group — e.g. sulphate, nh4cl, group v" autocomplete="off" spellcheck="false">
   <div class="saltlist" id="saltList"></div>
@@ -526,55 +560,37 @@ const ASH={
    ========================================================= */
 const GUIDE=[
  {sec:'I. Physical examination',tests:[
-  {name:'1. Physical appearance',steps:['Note the colour and appearance of the salt — click <b>Observe</b> on the salt card.'],needs:['observe']},
-  {name:'2. Odour test',steps:['Rub a pinch of salt between the fingers with a drop of water and smell it — click <b>Smell</b>.'],needs:['smell']},
-  {name:'3. Flame test',steps:['Make a paste: a pinch of salt + a few drops of conc. HCl in a vessel.','Drag the dry glass rod on to the vessel to pick the paste up on the rod.','Drag the rod into the non-luminous Bunsen flame and note the colour.'],needs:['salt','concHCl','rodDry']},
-  {name:'4. Ash test',steps:['Take a pinch of salt in the test tube.','Add 3 drops of conc. HNO₃, then a few drops of Co(NO₃)₂ solution.','Dip a filter paper in the mixture (drag paper → tube), then burn the paper in the flame (drag paper → burner).'],needs:['salt','concHNO3','CoNO3','filterPaper']},
-  {name:'5. Dry heating',steps:['Take a pinch of the dry salt in the test tube.','Drag the tube on to the burner and note any gas, sublimate or colour change.'],needs:['salt','heat']},
+  {name:'1. Physical appearance',steps:['Note the colour and appearance of the salt — click <b>Observe</b> on the salt card.'],needs:['observe'],sim:{kind:'appearance'}},
+  {name:'2. Odour test',steps:['Rub a pinch of salt between the fingers with a drop of water and smell it — click <b>Smell</b>.'],needs:['smell'],sim:{kind:'odour'}},
+  {name:'3. Flame test',steps:['Put a pinch of salt in a vessel and add a few drops of conc. HCl.','Drag the glass rod on to the vessel to pick the paste up.','Drag the rod into the non-luminous Bunsen flame.'],needs:['salt','concHCl','rodDry'],sim:{kind:'flame'}},
+  {name:'4. Ash test',steps:['Take a pinch of salt in the test tube.','Add 3 drops of conc. HNO₃, then cobalt nitrate solution.','Dip a filter paper in it, then burn the paper in the flame.'],needs:['salt','concHNO3','CoNO3','filterPaper'],sim:{kind:'ash'}},
  ]},
  {sec:'II-A. Anion — preliminary tests',tests:[
-  {name:'1. Dil. H₂SO₄',steps:['Take a pinch of salt in the test tube.','Add 1–2 mL of dil. H₂SO₄.','Test any gas evolved — show lime water, or moist blue litmus, at the mouth of the tube.'],needs:['salt','dilH2SO4','limeWater','blueLitmus']},
-  {name:'2. Conc. H₂SO₄',steps:['Take a pinch of salt in a dry test tube.','Add 3–4 drops of conc. H₂SO₄ and heat.','Test the gas — show a glass rod dipped in NH₄OH at the mouth, or add a paper ball.'],needs:['salt','concH2SO4','heat','rodNH4OH','paperBall']},
-  {name:'3. BaCl₂',steps:['Take the salt solution in the test tube.','Add BaCl₂ solution.','If a precipitate forms, add dil. HCl and note whether it dissolves.'],needs:['saltSoln','BaCl2','dilHCl']},
+  {name:'1. Dil. H₂SO₄ test',steps:['Take a pinch of salt in the test tube.','Add 1–2 mL of dil. H₂SO₄.','Show lime water at the mouth of the tube to test any gas.'],needs:['salt','dilH2SO4','limeWater'],sim:{items:['salt','dilH2SO4']}},
+  {name:'2. Conc. H₂SO₄ test',steps:['Take a pinch of salt in a dry test tube.','Add conc. H₂SO₄ and heat.','Add a paper ball if a brown gas appears.'],needs:['salt','concH2SO4','heat','paperBall'],sim:{items:['salt','concH2SO4'],heated:true}},
+  {name:'3. BaCl₂ test',steps:['Take the salt solution in the test tube.','Add BaCl₂ solution and look for a white precipitate.'],needs:['saltSoln','BaCl2'],sim:{items:['saltSoln','BaCl2']}},
  ]},
  {sec:'II-B. Anion — confirmatory tests',tests:[
-  {name:'BaCl₂, then dil. HCl',steps:['Salt solution + BaCl₂ solution.','Add dil. HCl to the precipitate.'],needs:['saltSoln','BaCl2','dilHCl']},
-  {name:'MgSO₄ + NH₄OH',steps:['Salt solution + MgSO₄ solution.','Add NH₄OH.'],needs:['saltSoln','MgSO4','NH4OH']},
-  {name:'AgNO₃, then NH₄OH',steps:['Salt solution + AgNO₃ solution.','Add NH₄OH to the precipitate.'],needs:['saltSoln','AgNO3','NH4OH']},
-  {name:'K₂Cr₂O₇ + conc. H₂SO₄',steps:['Salt + solid K₂Cr₂O₇ + conc. H₂SO₄; heat.','Pass the vapours into NaOH solution.','Add dil. acetic acid, then lead acetate.'],needs:['salt','K2Cr2O7','concH2SO4','heat','NaOH','aceticAcid','PbAc']},
-  {name:'Conc. H₂SO₄ + copper turnings',steps:['Salt + conc. H₂SO₄; heat strongly.','Add copper turnings.'],needs:['salt','concH2SO4','heat','copper']},
-  {name:'FeSO₄, then conc. H₂SO₄',steps:['Salt solution + freshly prepared FeSO₄ solution.','Pour conc. H₂SO₄ slowly down the side of the tube, then look at the junction of the layers.'],needs:['saltSoln','FeSO4','concH2SO4']},
-  {name:'Conc. H₂SO₄ + ethanol',steps:['Salt + conc. H₂SO₄ + a few drops of ethanol; warm.','Put water in the beaker, pour the tube into it (drag tube → beaker) and smell.'],needs:['salt','concH2SO4','ethanol','heat','beaker']},
-  {name:'Neutral FeCl₃',steps:['Salt solution + neutral FeCl₃ solution.','Boil the contents.'],needs:['saltSoln','FeCl3','heat']},
-  {name:'Lead acetate, then ammonium acetate',steps:['Salt solution + lead acetate solution.','Add hot ammonium acetate in excess to the precipitate.'],needs:['saltSoln','PbAc','NH4Ac']},
+  {name:'Carbonate 1 — dil. H₂SO₄ + lime water',steps:['A pinch of salt + 1–2 mL dil. H₂SO₄.','Show lime water at the mouth of the tube.'],needs:['salt','dilH2SO4','limeWater'],sim:{items:['salt','dilH2SO4']}},
+  {name:'Carbonate 2 — MgSO₄ + NH₄OH',steps:['Salt solution + MgSO₄ solution.','Add NH₄OH.'],needs:['saltSoln','MgSO4','NH4OH'],sim:{items:['saltSoln','MgSO4','NH4OH']}},
+  {name:'Nitrate 1 — conc. H₂SO₄ + copper turnings',steps:['Salt + conc. H₂SO₄; heat strongly.','Add copper turnings.'],needs:['salt','concH2SO4','heat','copper'],sim:{items:['salt','concH2SO4','copper'],heated:true}},
+  {name:'Nitrate 2 — brown ring test',steps:['Salt solution + freshly prepared FeSO₄ solution.','Pour conc. H₂SO₄ slowly down the side of the tube.','Look at the junction of the two layers.'],needs:['saltSoln','FeSO4','concH2SO4'],sim:{items:['saltSoln','FeSO4','concH2SO4']}},
+  {name:'Sulphate 1 — BaCl₂, then dil. HCl',steps:['Salt solution + BaCl₂ solution.','Add dil. HCl to the precipitate and see whether it dissolves.'],needs:['saltSoln','BaCl2','dilHCl'],sim:{items:['saltSoln','BaCl2','dilHCl']}},
+  {name:'Sulphate 2 — lead acetate, then ammonium acetate',steps:['Salt solution + lead acetate solution.','Add hot ammonium acetate in excess.'],needs:['saltSoln','PbAc','NH4Ac'],sim:{items:['saltSoln','PbAc','NH4Ac']}},
  ]},
  {sec:'III-A. Cation — group analysis',tests:[
-  {name:'Group 0 — NaOH, warm',steps:['Take a pinch of salt in the test tube; add NaOH solution.','Heat the tube.','Show a moist red litmus paper at the mouth of the tube.'],needs:['salt','NaOH','heat','redLitmus']},
-  {name:'Group I — dil. HCl',steps:['Take the salt solution in the test tube.','Add dil. HCl.'],needs:['saltSoln','dilHCl']},
-  {name:'Group II — dil. HCl + (NH₄)₂S',steps:['Salt solution + dil. HCl.','Add (NH₄)₂S solution.'],needs:['saltSoln','dilHCl','NH4_2S']},
-  {name:'Group III — NH₄Cl, then excess NH₄OH',steps:['Salt solution + solid NH₄Cl; boil, then cool.','Add NH₄OH in excess (drag it twice).'],needs:['saltSoln','NH4Cl','heat','NH4OH']},
-  {name:'Group IV — NH₄Cl, NH₄OH + (NH₄)₂S',steps:['Salt solution + solid NH₄Cl; boil, then cool.','Add NH₄OH in excess, then 3 drops of (NH₄)₂S.'],needs:['saltSoln','NH4Cl','heat','NH4OH','NH4_2S']},
-  {name:'Group V — NH₄Cl, NH₄OH + (NH₄)₂CO₃',steps:['Salt solution + solid NH₄Cl; boil, then cool.','Add NH₄OH in excess, then (NH₄)₂CO₃ solution.'],needs:['saltSoln','NH4Cl','heat','NH4OH','NH4_2CO3']},
-  {name:'Group VI — NH₄Cl, NH₄OH + Na₂HPO₄',steps:['Salt solution + solid NH₄Cl + NH₄OH.','Add Na₂HPO₄ solution.','Scratch the sides of the tube with a dry glass rod.'],needs:['saltSoln','NH4Cl','NH4OH','Na2HPO4','rodDry']},
+  {name:'Group 0 (NH₄⁺) — NaOH, warm',steps:['A pinch of salt + dil. NaOH in the test tube.','Heat the tube.','Show a moist red litmus paper at the mouth.'],needs:['salt','NaOH','heat','redLitmus'],sim:{items:['salt','NaOH'],heated:true}},
+  {name:'Group I (Pb²⁺) — dil. HCl',steps:['Take the salt solution in the test tube.','Add dil. HCl.'],needs:['saltSoln','dilHCl'],sim:{items:['saltSoln','dilHCl']}},
+  {name:'Group II (Cu²⁺) — dil. HCl + (NH₄)₂S',steps:['Salt solution + dil. HCl.','Add ammonium sulphide solution.'],needs:['saltSoln','dilHCl','NH4_2S'],sim:{items:['saltSoln','dilHCl','NH4_2S']}},
+  {name:'Group III (Al³⁺) — NH₄Cl, then excess NH₄OH',steps:['Salt solution + solid NH₄Cl; boil, then cool.','Add NH₄OH in excess.'],needs:['saltSoln','NH4Cl','heat','NH4OH'],sim:{items:['saltSoln','NH4Cl','NH4OH'],heated:true}},
  ]},
  {sec:'III-B. Cation — confirmatory tests',tests:[
-  {name:'NaOH, warm — rod dipped in conc. HCl at the mouth',steps:['Salt + NaOH solution; heat.','Show a glass rod dipped in conc. HCl at the mouth of the tube.'],needs:['salt','NaOH','heat','rodHCl']},
-  {name:'Nessler’s reagent',steps:['Salt solution + Nessler’s reagent.'],needs:['saltSoln','Nessler']},
-  {name:'KI solution',steps:['Salt solution + KI solution.'],needs:['saltSoln','KI']},
-  {name:'K₂CrO₄ solution',steps:['Salt solution + K₂CrO₄ solution.'],needs:['saltSoln','K2CrO4']},
-  {name:'NH₄OH in excess',steps:['Salt solution + NH₄OH, then more NH₄OH in excess (drag it twice).'],needs:['saltSoln','NH4OH']},
-  {name:'NH₄OH, acetic acid + K₄[Fe(CN)₆]',steps:['Salt solution + excess NH₄OH.','Acidify with dil. acetic acid.','Add K₄[Fe(CN)₆] solution.'],needs:['saltSoln','NH4OH','aceticAcid','K4FeCN6']},
-  {name:'Dil. HCl + blue litmus, then NH₄OH',steps:['Salt + dil. HCl + a few drops of blue litmus solution.','Add NH₄OH in excess.'],needs:['salt','dilHCl','litmusSoln','NH4OH']},
-  {name:'NaOH dropwise, then in excess',steps:['Salt solution + NaOH solution, a drop at a time.','Add NaOH in excess (drag it again) and shake.'],needs:['saltSoln','NaOH']},
-  {name:'K₄[Fe(CN)₆] solution',steps:['Salt solution + K₄[Fe(CN)₆] solution.'],needs:['saltSoln','K4FeCN6']},
-  {name:'NaOH, then conc. HNO₃ + PbO₂',steps:['Salt solution + NaOH solution.','Add a few drops of conc. HNO₃ and a little PbO₂; boil, cool and let it settle.'],needs:['saltSoln','NaOH','concHNO3','PbO2','heat']},
-  {name:'Acetic acid + KNO₂, warm',steps:['Salt solution + dil. acetic acid + a crystal of KNO₂.','Warm the tube.'],needs:['saltSoln','aceticAcid','KNO2','heat']},
-  {name:'Ether + NH₄SCN',steps:['Salt solution + 0.5 mL ether + a crystal of NH₄SCN.','Shake, then let the layers settle.'],needs:['saltSoln','ether','NH4SCN']},
-  {name:'NH₄OH + dimethyl glyoxime',steps:['Salt solution + a few drops of NH₄OH.','Add dimethyl glyoxime.'],needs:['saltSoln','NH4OH','DMG']},
-  {name:'Excess NaOH + bromine water',steps:['Salt solution + excess NaOH.','Add bromine water and boil.'],needs:['saltSoln','NaOH','Br2','heat']},
-  {name:'(NH₄)₂SO₄ solution',steps:['Salt solution + (NH₄)₂SO₄ solution.'],needs:['saltSoln','NH4_2SO4']},
-  {name:'Ammonium oxalate + NH₄OH',steps:['Salt solution + ammonium oxalate solution.','Add a few drops of NH₄OH.'],needs:['saltSoln','NH4Ox','NH4OH']},
-  {name:'Magneson reagent + NaOH',steps:['Salt solution + 2–3 drops of magneson reagent.','Add one drop of NaOH.'],needs:['saltSoln','magneson','NaOH']},
+  {name:'NH₄⁺ 1 — NaOH, warm + rod in conc. HCl',steps:['A pinch of salt + dil. NaOH; heat.','Show a glass rod dipped in conc. HCl at the mouth of the tube.'],needs:['salt','NaOH','heat','rodHCl'],sim:{items:['salt','NaOH'],heated:true}},
+  {name:'NH₄⁺ 2 — Nessler’s reagent',steps:['Salt solution + Nessler’s reagent.'],needs:['saltSoln','Nessler'],sim:{items:['saltSoln','Nessler']}},
+  {name:'Pb²⁺ 1 — KI solution',steps:['Salt solution + KI solution.'],needs:['saltSoln','KI'],sim:{items:['saltSoln','KI']}},
+  {name:'Pb²⁺ 2 — potassium chromate',steps:['Salt solution + K₂CrO₄ solution.'],needs:['saltSoln','K2CrO4'],sim:{items:['saltSoln','K2CrO4']}},
+  {name:'Al³⁺ 1 — blue lake',steps:['Salt + dil. HCl + a few drops of blue litmus solution.','Add NH₄OH in excess.'],needs:['salt','dilHCl','litmusSoln','NH4OH'],sim:{items:['salt','dilHCl','litmusSoln','NH4OH']}},
+  {name:'Al³⁺ 2 — ash test',steps:['Salt + conc. HNO₃ + cobalt nitrate solution.','Dip a filter paper in it and burn it in the flame.'],needs:['salt','concHNO3','CoNO3','filterPaper'],sim:{kind:'ash'}},
  ]},
 ];
 
@@ -636,14 +652,15 @@ rule(AP,'Dil. H₂SO₄',c=>c.salt&&c.has('dilH2SO4'),c=>{
 });
 rule(AN,'BaCl₂ + dil. HCl',c=>c.soln&&c.has('BaCl2')&&c.has('dilHCl'),c=>{
   if(c.A==='SO4') return O('The white precipitate is insoluble in dil. HCl.','Presence of sulphate is confirmed',{ppt:P(WH)});
-  if(c.A==='CO3') return O('The white precipitate dissolves in dil. HCl with brisk effervescence.','Presence of carbonate is confirmed',{bubbles:true},{gas:'CO2'});
-  return O('No precipitate.','Absence of sulphate and carbonate',{});
+  if(c.A==='CO3') return O('No precipitate; brisk effervescence on adding the acid.','Absence of sulphate',{bubbles:true},{gas:'CO2'});
+  return O('No precipitate.','Absence of sulphate',{});
 });
-rule(AP,'BaCl₂',c=>c.soln&&c.has('BaCl2'),c=>{
-  if(c.A==='SO4') return O('A white precipitate is formed.','Sulphate or carbonate indicated',{ppt:P(WH)});
-  if(c.A==='CO3') return O('A white precipitate is formed.','Sulphate or carbonate indicated',{ppt:P(WH)});
-  return O('No white precipitate.','Absence of sulphate',{});
-});
+// Preliminary BaCl₂ is the white precipitate alone; solubility in dil. HCl belongs
+// to the confirmatory test. Follows the practical record, where the carbonate is
+// written up as giving no white precipitate here.
+rule(AP,'BaCl₂',c=>c.soln&&c.has('BaCl2'),c=>
+  c.A==='SO4'?O('A white precipitate is formed.','Presence of sulphate',{ppt:P(WH)})
+             :O('No white precipitate.','Absence of sulphate',{}));
 rule(AN,'AgNO₃ + NH₄OH',c=>c.soln&&c.has('AgNO3')&&c.has('NH4OH'),c=>{
   if(c.A==='Cl') return O('The white precipitate dissolves in NH₄OH.','Presence of chloride is confirmed',{});
   if(c.A==='CO3') return O('The pale yellow precipitate dissolves.','Not chloride (carbonate interference)',{});
@@ -874,7 +891,12 @@ function acidity(v){
   }
   return 'neutral';
 }
-let showInf=false,sfxOn=false,pool=new Set(SALTS.map((_,i)=>i));   // both toggles default off
+// The SA1 practical set — the three salts the practical record covers.
+const SA1_NAMES=['Ammonium carbonate','Aluminium sulphate','Lead nitrate'];
+const SA1=SA1_NAMES.map(n=>SALTS.find(s=>s.n===n));
+const SA1_IDX=SA1.map(s=>SALTS.indexOf(s));
+let mode='learn';                                   // 'learn' | 'test'
+let showInf=true,sfxOn=false,pool=new Set(SA1_IDX);  // SA1 three by default
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 
 /* =========================================================
@@ -1010,15 +1032,29 @@ function showObs(e){
   $('#obsTest').textContent=e.test; $('#obsSec').textContent=e.sec||''; $('#obsSec').style.display=e.sec?'':'none';
   $('#obsExp').textContent=e.exp;
   $('#obsObs').innerHTML=(e.swatch?`<span class="swatch" style="background:${e.swatch}"></span>`:'')+esc(e.obs)+(e.smell?`<br><span class="smell">👃 ${esc(e.smell)}</span>`:'');
-  const inf=$('#obsInf'),hide=!showInf&&e.inf&&e.inf!=='—';
-  inf.classList.toggle('ok',showInf&&/confirmed|Presence of/i.test(e.inf));
-  if(hide){ inf.innerHTML='<button class="reveal-inf">👁 Reveal inference</button>';
-    inf.firstChild.onclick=()=>{ inf.textContent=e.inf; inf.classList.toggle('ok',/confirmed|Presence of/i.test(e.inf)); };
-  } else inf.textContent=e.inf;
+  const inf=$('#obsInf');
+  inf.classList.remove('ok');
+  if(mode==='test') inf.textContent='—';                      // test mode: work it out yourself
+  else { inf.textContent=e.inf; inf.classList.toggle('ok',/confirmed|Presence of/i.test(e.inf)); }
   $('#btnRecord').disabled=!e.recordable;
   $('#obs').classList.remove('flash'); void $('#obs').offsetWidth; $('#obs').classList.add('flash');
 }
 const esc=s=>String(s).replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
+// Small box that pops up next to the vessel with what just happened, then fades.
+let popT;
+function popObs(vid,title,obs,inf){
+  const p=$('#popObs'),v=VESSELS[vid];
+  if(!obs) return;
+  p.innerHTML=`<b>${esc(title||'Observation')}</b>${esc(obs)}${(showInf&&inf&&inf!=='—')?`<span class="pi">${esc(inf)}</span>`:''}`;
+  const bm=$('#benchMain').getBoundingClientRect();
+  const el=v?$(v.wrap):(typeof vid==='string'?$(vid):null);
+  if(el){ const r=el.getBoundingClientRect();
+    p.style.left=Math.max(4,Math.min(r.left-bm.left+r.width+14,bm.width-286))+'px';
+    p.style.top=Math.max(4,r.top-bm.top+20)+'px';
+  } else { p.style.left='50%'; p.style.top='12px'; }
+  p.classList.add('show'); clearTimeout(popT);
+  popT=setTimeout(()=>p.classList.remove('show'),5200);
+}
 function refresh(vid,silent){
   const v=VESSELS[vid],res=evaluate(v);
   renderVessel(v,res.vis);
@@ -1026,6 +1062,7 @@ function refresh(vid,silent){
   active=vid;
   const swatch=res.vis.ppt?res.vis.ppt.color:(res.vis.lake||res.vis.layer||(res.vis.liquid!==CLEAR?res.vis.liquid:null));
   showObs({sec:res.sec,test:res.test,exp:describeContents(v),obs:res.obs,inf:res.inf,smell:res.smell,swatch:v.st.items.length>1?swatch:null,recordable:v.st.items.length>0});   // a result with no inference is still a result worth recording
+  if(v.st.items.length) popObs(vid,res.test,res.obs,res.inf);
   renderContents();
 }
 function renderContents(){
@@ -1035,9 +1072,11 @@ function renderContents(){
   h+=st.items.length?seen.map(x=>`<span class="ctag">${esc(label(x))}${cnt[x]>1?' ×'+cnt[x]:''}</span>`).join(''):'<span class="ctag dim">empty</span>';
   if(st.heated) h+='<span class="ctag hot">heated</span>'; if(st.scratched) h+='<span class="ctag">scratched</span>'; if(st.soaked) h+='<span class="ctag hot">paper soaked</span>';
   // every tool that is carrying something, click to get a fresh clean one
+  // the tool you actually used — drag this same one on to the burner or another vessel
   for(const [tid,t] of Object.entries(tools)){
     if(!t.items.length&&!t.colour) continue;
-    h+=`<span class="ctag rodtag" data-tool="${tid}" title="Click for a fresh, clean one">${esc(label(tid))}${t.items.length?': '+esc(describeLoad(t)):' (used)'}</span>`;
+    h+=`<span class="ctag rodtag" data-item="${tid}" data-tool="${tid}" title="Drag this same one where you need it, or press ✕ for a fresh clean one">`
+      +`${esc(label(tid))}${t.items.length?': '+esc(describeLoad(t)):' (used)'}<button class="wipe" data-wipe="${tid}" title="Take a fresh clean one">✕</button></span>`;
   }
   const [oid,ov]=other,n=ov.st.items.length;
   const bar=$('#contentsBar');
@@ -1046,9 +1085,9 @@ function renderContents(){
     +`<button id="btnHeat">🔥 Heat</button><button id="btnWash">💧 Wash</button></div>`;
   $('#btnHeat').onclick=()=>heat(active); $('#btnWash').onclick=()=>wash(active);
   bar.querySelector('.switch').onclick=()=>refresh(oid);
-  bar.querySelectorAll('.rodtag').forEach(el=>el.onclick=()=>{
-    delete tools[el.dataset.tool];
-    renderShelf(currentCat); renderContents(); toast('A fresh '+label(el.dataset.tool)+'.');
+  bar.querySelectorAll('.wipe').forEach(b=>b.onclick=e=>{
+    e.stopPropagation(); const id=b.dataset.wipe;
+    delete tools[id]; renderShelf(currentCat); renderContents(); toast('A fresh '+label(id)+'.');
   });
 }
 
@@ -1082,11 +1121,35 @@ function renderDish(){
   const sol=CATIONS[salt.c].sol||'#dbeafe';
   $('#flaskSvg').innerHTML=`<path d="M26 6h12v16l14 26a6 6 0 0 1-5 9H17a6 6 0 0 1-5-9l14-26z" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5"/><path d="M19 40l4-8h18l4 8a6 6 0 0 1 4 9H14a6 6 0 0 1 5-9z" fill="${sol}"/><rect x="24" y="3" width="16" height="5" rx="2" fill="#94a3b8"/>`;
 }
+// What each of the three SA1 salts does for this test. Computed by running the real
+// rule engine against each salt, so the table can never drift from the simulation.
+function simFor(test,s){
+  const keep=salt; salt=s;
+  let out;
+  try{
+    const k=test.sim&&test.sim.kind;
+    if(k==='appearance'){ const c=CATIONS[s.c]; out=(s.color||c.color)?((s.color||c.color)+' crystalline solid'):'Colourless (white) crystalline solid'; }
+    else if(k==='odour'){ const nh=s.c==='NH4',ac=s.a==='Ac'; out=nh&&ac?'Ammoniacal and vinegar-like smell':nh?'Ammoniacal smell':ac?'Vinegar-like smell':'No characteristic smell'; }
+    else if(k==='flame'){ out=(FLAME[s.c]||FLAME.none).obs; }
+    else if(k==='ash'){ out=(ASH[s.c]||ASH.none).obs; }
+    else { const v={name:'test tube',st:{items:[...test.sim.items],heated:!!test.sim.heated,scratched:false,soaked:false,gas:null,smell:null}};
+           out=evaluate(v).obs; }
+  }catch(e){ out='—'; }
+  salt=keep; return out;
+}
+function cmpTable(test){
+  if(mode!=='learn'||!test.sim) return '';
+  const rows=SA1.map(s=>`<tr class="${s===salt?'here':''}"><td class="s">${esc(s.f)}</td><td class="o">${esc(simFor(test,s))}</td></tr>`).join('');
+  return `<div class="cmp"><h5>What each salt gives</h5><table>${rows}</table></div>`;
+}
 function renderGuide(){
-  $('#guide').innerHTML=GUIDE.map((s,si)=>`<details${si<2?' open':''}><summary>${esc(s.sec)}</summary>${s.tests.map((t,ti)=>`<div class="test${selectedTest===t?' active':''}" data-si="${si}" data-ti="${ti}">${esc(t.name)}<ol class="steps">${t.steps.map(x=>`<li>${x}</li>`).join('')}</ol></div>`).join('')}</details>`).join('');
+  $('#guide').innerHTML=GUIDE.map((s,si)=>`<details${si<2?' open':''}><summary>${esc(s.sec)}</summary>${s.tests.map((t,ti)=>`<div class="test${selectedTest===t?' active':''}" data-si="${si}" data-ti="${ti}">${esc(t.name)}<ol class="steps">${t.steps.map(x=>`<li>${x}</li>`).join('')}</ol>${selectedTest===t?cmpTable(t):''}</div>`).join('')}</details>`).join('');
 }
 function selectTest(t){
   selectedTest=t;
+  const open=[...$$('#guide details')].map(d=>d.open);
+  renderGuide();                                   // redraw so the comparison table follows the selection
+  $$('#guide details').forEach((d,i)=>d.open=open[i]!==undefined?open[i]:d.open);
   $$('.guide .test').forEach(el=>el.classList.toggle('active',GUIDE[el.dataset.si].tests[el.dataset.ti]===t));
   const tray=$('#tray');
   if(!t){ tray.classList.add('hidden'); renderShelf(currentCat); return; }
@@ -1150,9 +1213,10 @@ function drawSalt(avoid){
 // Only the settings persist. The salt is never restored — reloading gives a fresh
 // unknown, and a notebook from the previous salt would not belong to it.
 function save(){ try{ const r=document.getElementById('roughText');
-  localStorage.setItem('chemlab',JSON.stringify({inf:showInf,sfx:sfxOn,pool:[...pool],last:SALTS.indexOf(salt),rough:r?r.value:''})); }catch(e){} }
+  localStorage.setItem('chemlab',JSON.stringify({mode,sfx:sfxOn,pool:[...pool],last:SALTS.indexOf(salt),rough:r?r.value:''})); }catch(e){} }
 function load(){ try{ const d=JSON.parse(localStorage.getItem('chemlab')); if(d){
-  showInf=!!d.inf; sfxOn=!!d.sfx;
+  if(d.mode==='learn'||d.mode==='test') mode=d.mode;
+  sfxOn=!!d.sfx;
   if(typeof d.rough==='string'){ const r=document.getElementById('roughText'); if(r) r.value=d.rough; }
   if(Array.isArray(d.pool)&&d.pool.length) pool=new Set(d.pool.filter(i=>SALTS[i]));
   return SALTS[d.last]||null; } }catch(e){} return null; }
@@ -1207,7 +1271,7 @@ function dipTool(vid,id){
     inf=a==='acid'?'The solution is acidic':a==='base'?'The solution is alkaline':'The solution is neutral to litmus';
   } else if(id==='filterPaper') t.colour='#e9d5a1';
   active=vid; refresh(vid); renderShelf(currentCat); renderContents();
-  if(obs) showObs({sec:AP,test:it.label,exp:describeContents(v)+' — '+it.label+' dipped in the solution',obs,inf,recordable:true});
+  if(obs){ showObs({sec:AP,test:it.label,exp:describeContents(v)+' — '+it.label+' dipped in the solution',obs,inf,recordable:true}); popObs(vid,it.label,obs,inf); }
   else toast(it.label+' now carries '+describeLoad(t)+'.');
 }
 function probe(vid,id){
@@ -1238,6 +1302,7 @@ function probe(vid,id){
   active=vid; renderShelf(currentCat); renderContents();
   const nm=it.label.replace(/^Moist /,'m');
   showObs({sec:id==='rodHCl'?CC:(id==='redLitmus'?CG:AP),test:nm[0].toUpperCase()+nm.slice(1),exp,obs,inf,recordable:true});
+  popObs(vid,nm[0].toUpperCase()+nm.slice(1),obs,inf);
 }
 // Burn whatever is on the rod. A colour needs the salt AND an acid to make the
 // volatile chloride — salt alone only flickers, which is what happens at the bench.
@@ -1271,12 +1336,14 @@ function flameTest(rid){
   t.items=[]; t.colour=null;                // the coating burns off
   renderShelf(currentCat); renderContents();
   showObs({sec:PH,test:'Flame test',exp,obs,inf,swatch:hex,recordable:true});
+  popObs('#burner','Flame test',obs,inf);
 }
 function ashTest(){
   const t=T('filterPaper'),has=id=>t.items.includes(id);
   if(!has('salt')||!has('concHNO3')||!has('CoNO3')){
     showObs({sec:PH,test:'Ash test',exp:(t.items.length?'Filter paper carrying '+describeLoad(t):'A dry filter paper')+' burnt in the flame',
       obs:t.items.length?'The paper burns away leaving an ordinary black ash.':'The dry paper simply burns away.',inf:'—',recordable:t.items.length>0});
+    popObs('#burner','Ash test',t.items.length?'The paper burns away leaving an ordinary black ash.':'The dry paper simply burns away.','—');
     t.items=[]; t.colour=null; renderShelf(currentCat); renderContents(); return;
   }
   const a=ASH[salt.c]||ASH.none;
@@ -1284,6 +1351,7 @@ function ashTest(){
   $('#rodOverlay').classList.add('show'); setTimeout(()=>$('#rodOverlay').classList.remove('show'),4500);
   t.items=[]; t.colour=null; renderShelf(currentCat); renderContents();
   showObs({sec:PH,test:'Ash test',exp:'Filter paper carrying salt + conc. HNO₃ + Co(NO₃)₂, burnt in the flame',obs:a.obs,inf:a.inf,swatch:a.hex,recordable:true});
+  popObs('#burner','Ash test',a.obs,a.inf);
 }
 function observeSalt(){
   const cat=CATIONS[salt.c],col=salt.color||cat.color;
@@ -1429,6 +1497,11 @@ $('#btnCheck').onclick=()=>{
 $('#btnReveal').onclick=()=>{ const v=$('#verdict'); v.className='verdict info'; v.innerHTML=`The given salt is <b>${salt.n} — ${salt.f}</b> (anion ${ANIONS[salt.a].sym}, cation ${CATIONS[salt.c].sym}).`; };
 $('#btnNew').onclick=()=>{ saltQuery=''; $('#saltSearch').value=''; renderSaltList(); $('#newModal').classList.add('show'); };
 $('#btnCloseNew').onclick=()=>$('#newModal').classList.remove('show');
+$('#btnSA1').onclick=()=>{
+  pool=new Set(SA1_IDX); renderSaltList();
+  setSalt(drawSalt(salt),true); $('#newModal').classList.remove('show');
+  toast('SA1 practical — one of the three salts has been given.');
+};
 $('#btnRandom').onclick=()=>{
   if(!pool.size) return toast('Tick at least one salt for the random pool.');
   setSalt(drawSalt(salt),true); $('#newModal').classList.remove('show');
@@ -1444,9 +1517,24 @@ $('#poolAll').onclick=()=>{ matchIdx().forEach(i=>pool.add(i)); renderSaltList()
 $('#poolNone').onclick=()=>{ matchIdx().forEach(i=>pool.delete(i)); renderSaltList(); save(); };
 $('#saltSearch').oninput=e=>{ saltQuery=e.target.value; renderSaltList(); };
 $('#saltSearch').onkeydown=e=>{ if(e.key==='Escape'&&e.target.value){ e.stopPropagation(); e.target.value=''; saltQuery=''; renderSaltList(); } };
-$('#tgInf').onchange=e=>{ showInf=e.target.checked; applySettings(); renderNotebook(); refresh(active); save(); toast(showInf?'Inferences shown.':'Inferences hidden — deduce them yourself, then toggle to check.'); };
 $('#tgSfx').onchange=e=>{ sfxOn=e.target.checked; applySettings(); save(); if(sfxOn) sfx('ding'); };
-function applySettings(){ document.body.classList.toggle('hide-inf',!showInf); $('#tgInf').checked=showInf; $('#tgSfx').checked=sfxOn; }
+function applySettings(){
+  showInf=(mode==='learn');
+  document.body.classList.toggle('hide-inf',!showInf);
+  document.body.classList.toggle('test-mode',mode==='test');
+  $$('#modeSw button').forEach(b=>b.classList.toggle('on',b.dataset.mode===mode));
+  $('#tgSfx').checked=sfxOn;
+  // the procedure tab only exists in learning mode
+  const gt=$('.side-tabs button[data-side="guide"]');
+  gt.style.display=mode==='learn'?'':'none';
+  if(mode==='test'&&gt.classList.contains('active')) $('.side-tabs button[data-side="nb"]').click();
+}
+$('#modeSw').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b||b.dataset.mode===mode) return;
+  mode=b.dataset.mode; if(mode==='test') selectTest(null);
+  applySettings(); renderGuide(); renderNotebook(); refresh(active); save();
+  toast(mode==='learn'?'Learning mode — procedure, inferences and the three-salt table are shown.':'Test mode — you are on your own.');
+});
 $$('.modal-bg').forEach(m=>m.addEventListener('click',e=>{ if(e.target===m) m.classList.remove('show'); }));
 
 /* ---- init ---- */
