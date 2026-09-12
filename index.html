@@ -250,7 +250,7 @@ main{display:grid;grid-template-columns:300px 1fr 390px;height:calc(100vh - 60px
 </head>
 <body>
 <header>
-  <div class="brand"><div class="logo">⚗</div><div>ChemLab<small>Qualitative analysis of a simple salt · CBSE Class XI · <span class="ver">build 9</span></small></div></div>
+  <div class="brand"><div class="logo">⚗</div><div>ChemLab<small>Qualitative analysis of a simple salt · CBSE Class XI · <span class="ver">build 10</span></small></div></div>
   <div class="salt-tag" id="saltTag">Unknown salt</div>
   <div class="actions">
     <div class="modesw" id="modeSw" title="Learning shows the procedure, the inferences and how all three salts behave. Test hides them all.">
@@ -1042,10 +1042,19 @@ function showObs(e){
 const esc=s=>String(s).replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
 // Small box that pops up next to the vessel with what just happened, then fades.
 let popT;
-// Only real results pop. Setting up — salt taken, solution poured, mixture made —
-// has no inference behind it and stays out of the way.
+// A pop-up is only for an observation the practical record actually lists. Setting up,
+// and any test outside the three write-ups, stays quiet.
+const DOC_OBS=new Set([
+  'Physical appearance','Odour test','Flame test','Ash test',                       // I. physical
+  'Dil. H₂SO₄','Conc. H₂SO₄','Conc. H₂SO₄ + paper ball','BaCl₂',                    // II-A. anion preliminary
+  'Lime water','MgSO₄','Conc. H₂SO₄ + copper turnings','FeSO₄ + conc. H₂SO₄',       // II-B. anion confirmatory
+  'BaCl₂ + dil. HCl','Lead acetate','Lead acetate + ammonium acetate',
+  'NaOH','Moist red litmus paper','Dil. HCl','Dil. HCl + (NH₄)₂S','NH₄Cl + NH₄OH',  // III-A. cation groups
+  'Glass rod dipped in conc. HCl','Nessler’s reagent','KI','K₂CrO₄',                // III-B. cation confirmatory
+  'Blue litmus + excess NH₄OH',
+]);
 function popObs(vid,title,obs,inf){
-  if(!obs||!inf||inf==='—') return;
+  if(!obs||!inf||inf==='—'||!DOC_OBS.has(title)) return;
   const p=$('#popObs');
   p.innerHTML=`<b>${esc(title||'Observation')}</b>${esc(obs)}${showInf?`<span class="pi">${esc(inf)}</span>`:''}`;
   p.classList.add('show'); clearTimeout(popT);
@@ -1267,7 +1276,8 @@ function dipTool(vid,id){
     inf=a==='acid'?'The solution is acidic':a==='base'?'The solution is alkaline':'The solution is neutral to litmus';
   } else if(id==='filterPaper') t.colour='#e9d5a1';
   active=vid; refresh(vid); renderShelf(currentCat); renderContents();
-  if(obs){ showObs({sec:AP,test:it.label,exp:describeContents(v)+' — '+it.label+' dipped in the solution',obs,inf,recordable:true}); popObs(vid,it.label,obs,inf); }
+  // dipping litmus in the solution is not one of the recorded tests, so it does not pop
+  if(obs) showObs({sec:AP,test:it.label+' (dipped)',exp:describeContents(v)+' — '+it.label+' dipped in the solution',obs,inf,recordable:true});
   else toast(it.label+' now carries '+describeLoad(t)+'.');
 }
 function probe(vid,id){
@@ -1296,9 +1306,8 @@ function probe(vid,id){
   if(pos&&id==='blueLitmus') t.colour='#ef4444';
   if(pos&&id==='limeWater') t.colour='#f1f5f9';
   active=vid; renderShelf(currentCat); renderContents();
-  const nm=it.label.replace(/^Moist /,'m');
-  showObs({sec:id==='rodHCl'?CC:(id==='redLitmus'?CG:AP),test:nm[0].toUpperCase()+nm.slice(1),exp,obs,inf,recordable:true});
-  popObs(vid,nm[0].toUpperCase()+nm.slice(1),obs,inf);
+  showObs({sec:id==='rodHCl'?CC:(id==='redLitmus'?CG:AP),test:it.label,exp,obs,inf,recordable:true});
+  popObs(vid,it.label,obs,inf);
 }
 // Burn whatever is on the rod. A colour needs the salt AND an acid to make the
 // volatile chloride — salt alone only flickers, which is what happens at the bench.
@@ -1351,13 +1360,17 @@ function ashTest(){
 }
 function observeSalt(){
   const cat=CATIONS[salt.c],col=salt.color||cat.color;
-  showObs({sec:PH,test:'Physical appearance',exp:'Colour and appearance of the salt is noted',obs:col?col+' crystalline solid.':'Colourless (white) crystalline solid.',inf:col?(cat.colInf||''):'Presence of NH₄⁺, Ca²⁺, Sr²⁺, Ba²⁺, Zn²⁺, Pb²⁺, Al³⁺ or Mg²⁺ (coloured ions absent)',swatch:salt.hex||cat.hex||'#f8fafc',recordable:true});
+  const obs=col?col+' crystalline solid.':'Colourless (white) crystalline solid.';
+  const inf=col?(cat.colInf||''):'Presence of NH₄⁺, Ca²⁺, Sr²⁺, Ba²⁺, Zn²⁺, Pb²⁺, Al³⁺ or Mg²⁺ (coloured ions absent)';
+  showObs({sec:PH,test:'Physical appearance',exp:'Colour and appearance of the salt is noted',obs,inf,swatch:salt.hex||cat.hex||'#f8fafc',recordable:true});
+  popObs(null,'Physical appearance',obs,inf);
 }
 function smellSalt(){
   const nh=salt.c==='NH4',ac=salt.a==='Ac';
   const obs=nh&&ac?'Ammoniacal and vinegar-like smell.':nh?'Ammoniacal smell.':ac?'Vinegar-like smell.':'No characteristic smell.';
   const inf=nh&&ac?'NH₄⁺ and CH₃COO⁻ might be present':nh?'NH₄⁺ might be present':ac?'CH₃COO⁻ might be present':'Absence of NH₄⁺ and CH₃COO⁻';
   showObs({sec:PH,test:'Odour test',exp:'A pinch of salt is rubbed between the fingers with a drop of water',obs,inf,smell:nh||ac?obs.replace('.',''):null,recordable:true});
+  popObs(null,'Odour test',obs,inf);
 }
 function handleDrop(id,zone){
   if(VESSELS[zone]){
