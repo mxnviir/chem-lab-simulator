@@ -250,7 +250,7 @@ main{display:grid;grid-template-columns:300px 1fr 390px;height:calc(100vh - 60px
 </head>
 <body>
 <header>
-  <div class="brand"><div class="logo">⚗</div><div>ChemLab<small>Qualitative analysis of a simple salt · CBSE Class XI · <span class="ver">build 10</span></small></div></div>
+  <div class="brand"><div class="logo">⚗</div><div>ChemLab<small>Qualitative analysis of a simple salt · CBSE Class XI · <span class="ver">build 11</span></small></div></div>
   <div class="salt-tag" id="saltTag">Unknown salt</div>
   <div class="actions">
     <div class="modesw" id="modeSw" title="Learning shows the procedure, the inferences and how all three salts behave. Test hides them all.">
@@ -491,7 +491,8 @@ const ITEMS=[
   {id:'concHCl',label:'conc. HCl',cat:'acid',col:'#e6ecf3',hz:true},
   {id:'concHNO3',label:'conc. HNO₃',cat:'acid',col:'#fff3b0',hz:true},
   {id:'aceticAcid',label:'dil. CH₃COOH',cat:'acid',col:'#eef7e8'},
-  {id:'NaOH',label:'NaOH solution',cat:'acid',col:'#ececff'},
+  {id:'dilNaOH',label:'dil. NaOH',cat:'acid',col:'#ececff'},
+  {id:'concNaOH',label:'conc. NaOH',cat:'acid',col:'#dcdcff',hz:true},
   {id:'NH4OH',label:'NH₄OH solution',cat:'acid',col:'#e9f6ff'},
   {id:'BaCl2',label:'BaCl₂ solution',cat:'reagent'},
   {id:'AgNO3',label:'AgNO₃ solution',cat:'reagent',col:'#e5e7eb',dark:true},
@@ -579,13 +580,13 @@ const GUIDE=[
   {name:'Sulphate 2 — lead acetate, then ammonium acetate',steps:['Salt solution + lead acetate solution.','Add hot ammonium acetate in excess.'],needs:['saltSoln','PbAc','NH4Ac'],sim:{items:['saltSoln','PbAc','NH4Ac']}},
  ]},
  {sec:'III-A. Cation — group analysis',tests:[
-  {name:'Group 0 (NH₄⁺) — NaOH, warm',steps:['A pinch of salt + dil. NaOH in the test tube.','Heat the tube.','Show a moist red litmus paper at the mouth.'],needs:['salt','NaOH','heat','redLitmus'],sim:{items:['salt','NaOH'],heated:true}},
+  {name:'Group 0 (NH₄⁺) — NaOH, warm',steps:['A pinch of salt + dil. NaOH in the test tube.','Heat the tube.','Show a moist red litmus paper at the mouth.'],needs:['salt','dilNaOH','heat','redLitmus'],sim:{items:['salt','dilNaOH'],heated:true}},
   {name:'Group I (Pb²⁺) — dil. HCl',steps:['Take the salt solution in the test tube.','Add dil. HCl.'],needs:['saltSoln','dilHCl'],sim:{items:['saltSoln','dilHCl']}},
   {name:'Group II (Cu²⁺) — dil. HCl + (NH₄)₂S',steps:['Salt solution + dil. HCl.','Add ammonium sulphide solution.'],needs:['saltSoln','dilHCl','NH4_2S'],sim:{items:['saltSoln','dilHCl','NH4_2S']}},
   {name:'Group III (Al³⁺) — NH₄Cl, then excess NH₄OH',steps:['Salt solution + solid NH₄Cl; boil, then cool.','Add NH₄OH in excess.'],needs:['saltSoln','NH4Cl','heat','NH4OH'],sim:{items:['saltSoln','NH4Cl','NH4OH'],heated:true}},
  ]},
  {sec:'III-B. Cation — confirmatory tests',tests:[
-  {name:'NH₄⁺ 1 — NaOH, warm + rod in conc. HCl',steps:['A pinch of salt + dil. NaOH; heat.','Show a glass rod dipped in conc. HCl at the mouth of the tube.'],needs:['salt','NaOH','heat','rodHCl'],sim:{items:['salt','NaOH'],heated:true}},
+  {name:'NH₄⁺ 1 — NaOH, warm + rod in conc. HCl',steps:['A pinch of salt + dil. NaOH; heat.','Show a glass rod dipped in conc. HCl at the mouth of the tube.'],needs:['salt','dilNaOH','heat','rodHCl'],sim:{items:['salt','dilNaOH'],heated:true}},
   {name:'NH₄⁺ 2 — Nessler’s reagent',steps:['Salt solution + Nessler’s reagent.'],needs:['saltSoln','Nessler'],sim:{items:['saltSoln','Nessler']}},
   {name:'Pb²⁺ 1 — KI solution',steps:['Salt solution + KI solution.'],needs:['saltSoln','KI'],sim:{items:['saltSoln','KI']}},
   {name:'Pb²⁺ 2 — potassium chromate',steps:['Salt solution + K₂CrO₄ solution.'],needs:['saltSoln','K2CrO4'],sim:{items:['saltSoln','K2CrO4']}},
@@ -712,8 +713,10 @@ rule(CC,'Conc. HNO₃ + PbO₂',c=>c.salt&&c.has('PbO2')&&c.has('concHNO3'),c=>{
 });
 rule(CG,'NaOH',c=>c.salt&&c.has('NaOH'),c=>{
   const ex=c.n('NaOH')>1,H=c.H,C=c.C;
-  if(C==='NH4') return H?O('A colourless gas with the smell of ammonia is evolved.','Presence of Group 0 (NH₄⁺)',{},{gas:'NH3',smell:'Ammoniacal smell'})
-                        :O('A faint smell of ammonia in the cold.','NH₄⁺ indicated',{},{gas:'NH3',smell:'Faint ammonia smell'});
+  // conc. NaOH is strong enough to drive the ammonia off without heating
+  if(C==='NH4') return (H||c.has('concNaOH'))
+    ?O('A colourless gas with the smell of ammonia is evolved.','Presence of Group 0 (NH₄⁺)',{},{gas:'NH3',smell:'Ammoniacal smell'})
+    :O('A faint smell of ammonia in the cold.','NH₄⁺ indicated',{},{gas:'NH3',smell:'Faint ammonia smell'});
   const tail=H?' No ammonia gas is evolved.':'';
   const r={
     Cu:[H?'A pale blue precipitate turns black on heating.':'A pale blue precipitate, insoluble in excess NaOH.','Cu²⁺ indicated',P(H?BLK:PBLUE)],
@@ -878,7 +881,7 @@ let tools={};
 const T=id=>tools[id]||(tools[id]={items:[],colour:null,note:null});
 const DIPPABLE=new Set(['rodDry','rodHCl','rodNH4OH','filterPaper','redLitmus','blueLitmus']);
 const ACIDS=new Set(['dilH2SO4','concH2SO4','dilHCl','concHCl','concHNO3','aceticAcid']);
-const BASES=new Set(['NaOH','NH4OH','NH4_2CO3']);
+const BASES=new Set(['dilNaOH','concNaOH','NH4OH','NH4_2CO3']);
 const describeLoad=t=>{ const seen=[],c={}; t.items.forEach(x=>{ if(!c[x]){c[x]=1;seen.push(x);} }); return seen.map(label).join(' + '); };
 // acid or base, including hydrolysis of the salt itself
 function acidity(v){
@@ -938,7 +941,10 @@ function sfx(kind){
 
 function evaluate(v){
   const st=v.st,items=st.items,C=salt.c,A=salt.a;
-  const has=id=>items.includes(id),n=id=>items.filter(x=>x===id).length;
+  // 'NaOH' in a rule means either strength; ask for the exact id when it matters
+  const NAOH=['dilNaOH','concNaOH'];
+  const has=id=>id==='NaOH'?NAOH.some(x=>items.includes(x)):items.includes(id);
+  const n=id=>id==='NaOH'?items.filter(x=>NAOH.includes(x)).length:items.filter(x=>x===id).length;
   const liquids=items.filter(isLiquid).length;
   const c={has,n,H:st.heated,scr:st.scratched,C,A,liquids,items:items.length,vessel:v.name,
     salt:has('salt')||has('saltSoln'),soln:has('saltSoln')||(has('salt')&&liquids>0)};
