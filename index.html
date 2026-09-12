@@ -55,9 +55,9 @@ button.reveal-inf{padding:3px 10px;font-size:12px;border-radius:8px;border-style
 .cmp td.o{color:#374151}
 .cmp .here{background:#fffbeb}
 /* observation pop-up on the bench */
-.popobs{position:absolute;z-index:12;max-width:270px;background:#fff;border:1px solid var(--line);border-left:4px solid var(--accent);
-  border-radius:10px;box-shadow:0 10px 30px rgba(16,24,40,.18);padding:9px 12px;font-size:12.5px;line-height:1.45;
-  opacity:0;transform:translateY(6px);transition:.22s;pointer-events:none}
+.popobs{position:fixed;top:72px;right:18px;z-index:1150;width:280px;background:#fff;border:1px solid var(--line);border-left:4px solid var(--accent);
+  border-radius:10px;box-shadow:0 12px 34px rgba(16,24,40,.22);padding:10px 13px;font-size:12.5px;line-height:1.45;
+  opacity:0;transform:translateY(-8px);transition:.22s;pointer-events:none}
 .popobs.show{opacity:1;transform:translateY(0)}
 .popobs b{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.3px;color:var(--muted);margin-bottom:3px}
 .popobs .pi{display:block;margin-top:5px;padding-top:5px;border-top:1px dashed var(--line);font-weight:600;color:var(--ok)}
@@ -250,7 +250,7 @@ main{display:grid;grid-template-columns:300px 1fr 390px;height:calc(100vh - 60px
 </head>
 <body>
 <header>
-  <div class="brand"><div class="logo">⚗</div><div>ChemLab<small>Qualitative analysis of a simple salt · CBSE Class XI · <span class="ver">build 8</span></small></div></div>
+  <div class="brand"><div class="logo">⚗</div><div>ChemLab<small>Qualitative analysis of a simple salt · CBSE Class XI · <span class="ver">build 9</span></small></div></div>
   <div class="salt-tag" id="saltTag">Unknown salt</div>
   <div class="actions">
     <div class="modesw" id="modeSw" title="Learning shows the procedure, the inferences and how all three salts behave. Test hides them all.">
@@ -850,7 +850,7 @@ rule(CC,'Ether + NH₄SCN',c=>c.soln&&c.has('ether')&&c.has('NH4SCN'),c=>c.C==='
 rule(CC,'Ether added',c=>c.soln&&c.has('ether'),c=>O('The ether forms a separate colourless layer above the solution.','—',{layer:'#f8fafc'}));
 rule(PH,'Ash test (preparation)',c=>c.has('salt')&&c.has('concHNO3')&&c.has('CoNO3'),c=>O('A pink solution is obtained.','—',{liquid:'#f9a8d4'}));
 rule(PH,'Ash test (preparation)',c=>c.has('salt')&&(c.has('concHNO3')||c.has('CoNO3')),c=>O(c.has('CoNO3')?'The salt is wetted by the pink cobalt nitrate solution.':'The salt dissolves in the acid.','—',{liquid:c.has('CoNO3')?'#f9a8d4':'#fff7c2'}));
-rule(PH,'Solubility',c=>c.has('salt')&&c.has('water'),c=>O('The salt dissolves in water giving a '+(CATIONS[c.C].color?CATIONS[c.C].color.toLowerCase():'colourless')+' solution.','Water-soluble salt',{}));
+rule(PH,'Solubility',c=>c.has('salt')&&c.has('water'),c=>O('The salt dissolves in water giving a '+(CATIONS[c.C].color?CATIONS[c.C].color.toLowerCase():'colourless')+' solution.','—',{}));
 rule(PH,'Dry heating',c=>c.has('salt')&&!c.soln&&c.liquids===0&&c.H,c=>{
   if(c.C==='NH4') return O('White fumes / sublimate with the smell of ammonia; the salt volatilises.','NH₄⁺ might be present',{},{gas:'NH3',smell:'Ammoniacal smell'});
   if(c.A==='NO3') return O('Reddish brown fumes are evolved, leaving a residue.','Nitrate might be present',{},{gas:'NO2'});
@@ -1042,16 +1042,12 @@ function showObs(e){
 const esc=s=>String(s).replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
 // Small box that pops up next to the vessel with what just happened, then fades.
 let popT;
+// Only real results pop. Setting up — salt taken, solution poured, mixture made —
+// has no inference behind it and stays out of the way.
 function popObs(vid,title,obs,inf){
-  const p=$('#popObs'),v=VESSELS[vid];
-  if(!obs) return;
-  p.innerHTML=`<b>${esc(title||'Observation')}</b>${esc(obs)}${(showInf&&inf&&inf!=='—')?`<span class="pi">${esc(inf)}</span>`:''}`;
-  const bm=$('#benchMain').getBoundingClientRect();
-  const el=v?$(v.wrap):(typeof vid==='string'?$(vid):null);
-  if(el){ const r=el.getBoundingClientRect();
-    p.style.left=Math.max(4,Math.min(r.left-bm.left+r.width+14,bm.width-286))+'px';
-    p.style.top=Math.max(4,r.top-bm.top+20)+'px';
-  } else { p.style.left='50%'; p.style.top='12px'; }
+  if(!obs||!inf||inf==='—') return;
+  const p=$('#popObs');
+  p.innerHTML=`<b>${esc(title||'Observation')}</b>${esc(obs)}${showInf?`<span class="pi">${esc(inf)}</span>`:''}`;
   p.classList.add('show'); clearTimeout(popT);
   popT=setTimeout(()=>p.classList.remove('show'),5200);
 }
