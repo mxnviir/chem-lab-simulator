@@ -243,7 +243,7 @@ main{display:grid;grid-template-columns:300px 1fr 390px;height:calc(100vh - 60px
 </head>
 <body>
 <header>
-  <div class="brand"><div class="logo">⚗</div><div>ChemLab<small>Qualitative analysis of a simple salt · CBSE Class XI · <span class="ver">build 13</span></small></div></div>
+  <div class="brand"><div class="logo">⚗</div><div>ChemLab<small>Qualitative analysis of a simple salt · CBSE Class XI · <span class="ver">build 14</span></small></div></div>
   <div class="salt-tag" id="saltTag">Unknown salt</div>
   <div class="actions">
     <div class="modesw" id="modeSw" title="Learning shows the procedure, the inferences and how all three salts behave. Test hides them all.">
@@ -1025,7 +1025,13 @@ function pourAnim(v,col){
 /* =========================================================
    RENDER — observation card, contents, shelf, guide, notebook
    ========================================================= */
+// Several tests appear twice in the record under different headings — the ash test, the
+// NaOH/litmus test, dil. H₂SO₄, BaCl₂. Which one you are running is what decides where it
+// files, so the guide entry you have selected wins over the rule's own default.
+const selSec=()=>selectedTest?(GUIDE.find(g=>g.tests.includes(selectedTest))||{}).sec:null;
 function showObs(e){
+  const gs=selSec();
+  if(e.sec&&gs) e.sec=gs;
   lastEntry=e;
   $('#obsTest').textContent=e.test; $('#obsSec').textContent=e.sec||''; $('#obsSec').style.display=e.sec?'':'none';
   $('#obsExp').textContent=e.exp;
@@ -1284,7 +1290,9 @@ function probe(vid,id){
   if(pos&&id==='blueLitmus') t.colour='#ef4444';
   if(pos&&id==='limeWater') t.colour='#f1f5f9';
   active=vid; renderShelf(currentCat); renderContents();
-  showObs({sec:id==='rodHCl'?CC:(id==='redLitmus'?CG:AP),test:it.label,exp,obs,inf,recordable:true});
+  // lime water is only ever used to confirm the carbonate, so it belongs with the confirmations
+  const psec=id==='rodHCl'?CC:id==='redLitmus'?CG:id==='limeWater'?AN:AP;
+  showObs({sec:psec,test:it.label,exp,obs,inf,recordable:true});
 }
 // Burn whatever is on the rod. A colour needs the salt AND an acid to make the
 // volatile chloride — salt alone only flickers, which is what happens at the bench.
