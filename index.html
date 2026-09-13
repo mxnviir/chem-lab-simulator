@@ -55,7 +55,16 @@ button.reveal-inf{padding:3px 10px;font-size:12px;border-radius:8px;border-style
 .cmp td.o{color:#374151}
 .cmp .here{background:#fffbeb}
 /* ---------- layout ---------- */
-main{display:grid;grid-template-columns:300px 1fr 390px;height:calc(100vh - 60px);gap:14px;padding:14px}
+main{display:grid;grid-template-columns:300px 1fr 390px;height:calc(100vh - 60px);gap:14px;padding:14px;transition:grid-template-columns .28s ease}
+/* collapse the right-hand panel out of the way */
+body.panel-hidden main{grid-template-columns:300px 1fr 0px}
+body.panel-hidden #sidePanel{opacity:0;pointer-events:none;min-width:0;padding:0;border:0}
+#sidePanel{transition:opacity .2s}
+#panelToggle{position:fixed;top:50%;right:404px;transform:translateY(-50%);z-index:30;width:22px;height:60px;padding:0;
+  display:grid;place-items:center;font-size:13px;color:var(--muted);background:#fff;border:1px solid var(--line);
+  border-radius:8px 0 0 8px;border-right:0;box-shadow:-2px 0 8px rgba(16,24,40,.07);transition:right .28s ease,color .15s}
+#panelToggle:hover{color:var(--accent);border-color:#c7d2fe}
+body.panel-hidden #panelToggle{right:0}
 .panel{background:var(--panel);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column;min-height:0}
 .panel-h{padding:12px 14px;border-bottom:1px solid var(--line);font-weight:700;font-size:13px;letter-spacing:.3px;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:8px}
 /* ---------- shelf ---------- */
@@ -236,6 +245,10 @@ main{display:grid;grid-template-columns:300px 1fr 390px;height:calc(100vh - 60px
   header{height:auto;flex-wrap:wrap;gap:10px;padding:10px 14px}
   .salt-tag{margin-left:0}
   main{grid-template-columns:1fr;height:auto}
+  /* the columns stack here, so there is nothing to collapse */
+  #panelToggle{display:none}
+  body.panel-hidden main{grid-template-columns:1fr}
+  body.panel-hidden #sidePanel{opacity:1;pointer-events:auto;padding:revert;border:revert}
   .bench{min-height:720px}
   .items{grid-template-columns:repeat(5,1fr)}
 }
@@ -243,7 +256,7 @@ main{display:grid;grid-template-columns:300px 1fr 390px;height:calc(100vh - 60px
 </head>
 <body>
 <header>
-  <div class="brand"><div class="logo">⚗</div><div>ChemLab<small>Qualitative analysis of a simple salt · CBSE Class XI · <span class="ver">build 14</span></small></div></div>
+  <div class="brand"><div class="logo">⚗</div><div>ChemLab<small>Qualitative analysis of a simple salt · CBSE Class XI · <span class="ver">build 15</span></small></div></div>
   <div class="salt-tag" id="saltTag">Unknown salt</div>
   <div class="actions">
     <div class="modesw" id="modeSw" title="Learning shows the procedure, the inferences and how all three salts behave. Test hides them all.">
@@ -369,7 +382,8 @@ main{display:grid;grid-template-columns:300px 1fr 390px;height:calc(100vh - 60px
   </section>
 
   <!-- ===== SIDE ===== -->
-  <aside class="panel">
+  <button id="panelToggle" title="Hide the panel (H)" aria-label="Hide the panel">❯</button>
+  <aside class="panel" id="sidePanel">
     <div class="obs" id="obs">
       <div class="head"><span class="badge" id="obsTest">Ready</span><span class="badge sec" id="obsSec"></span></div>
       <div class="row"><b>Experiment</b><div id="obsExp">Pick a test from the guide below, or drag reagents on to the test tube.</div></div>
@@ -1202,9 +1216,10 @@ function drawSalt(avoid){
 // Only the settings persist. The salt is never restored — reloading gives a fresh
 // unknown, and a notebook from the previous salt would not belong to it.
 function save(){ try{ const r=document.getElementById('roughText');
-  localStorage.setItem('chemlab',JSON.stringify({mode,sfx:sfxOn,pool:[...pool],last:SALTS.indexOf(salt),rough:r?r.value:''})); }catch(e){} }
+  localStorage.setItem('chemlab',JSON.stringify({mode,sfx:sfxOn,pool:[...pool],last:SALTS.indexOf(salt),rough:r?r.value:'',panel:panelHidden})); }catch(e){} }
 function load(){ try{ const d=JSON.parse(localStorage.getItem('chemlab')); if(d){
   if(d.mode==='learn'||d.mode==='test') mode=d.mode;
+  panelHidden=!!d.panel;
   sfxOn=!!d.sfx;
   if(typeof d.rough==='string'){ const r=document.getElementById('roughText'); if(r) r.value=d.rough; }
   if(Array.isArray(d.pool)&&d.pool.length) pool=new Set(d.pool.filter(i=>SALTS[i]));
@@ -1524,6 +1539,22 @@ function applySettings(){
   gt.style.display=mode==='learn'?'':'none';
   if(mode==='test'&&gt.classList.contains('active')) $('.side-tabs button[data-side="nb"]').click();
 }
+// Collapse the right-hand panel so the bench gets the whole width.
+let panelHidden=false;
+function applyPanel(){
+  document.body.classList.toggle('panel-hidden',panelHidden);
+  const b=$('#panelToggle');
+  b.textContent=panelHidden?'❮':'❯';
+  b.title=panelHidden?'Show the panel (H)':'Hide the panel (H)';
+  b.setAttribute('aria-label',b.title);
+}
+$('#panelToggle').onclick=()=>{ panelHidden=!panelHidden; applyPanel(); save(); };
+document.addEventListener('keydown',e=>{
+  if(e.key!=='h'&&e.key!=='H') return;
+  const t=e.target;
+  if((t&&t.closest&&t.closest('input,textarea,select'))||e.ctrlKey||e.metaKey||e.altKey) return;
+  panelHidden=!panelHidden; applyPanel(); save();
+});
 $('#modeSw').addEventListener('click',e=>{
   const b=e.target.closest('button'); if(!b||b.dataset.mode===mode) return;
   mode=b.dataset.mode; if(mode==='test') selectTest(null);
@@ -1539,7 +1570,7 @@ $('#selCation').innerHTML=Object.entries(CATIONS).map(([k,v])=>`<option value="$
 const prevSalt=load();          // settings only; the unknown is drawn fresh every load
 salt=drawSalt(prevSalt);
 save();                         // record it now, so the next load avoids repeating it
-applySettings(); renderSaltList(); roughCount();
+applySettings(); applyPanel(); renderSaltList(); roughCount();
 renderShelf('acid'); renderGuide(); renderDish(); renderNotebook(); refresh('beaker',true); refresh('tube');
 showObs({test:'Welcome',sec:'',exp:'An unknown simple salt is given. Identify its anion and cation.',obs:'Choose a test in the procedure guide → drag the needed reagents on to the test tube (or beaker) → read the observation here → record it.',inf:'—'});
 // make the fresh draw visible, so a chance repeat is not mistaken for a stuck salt
