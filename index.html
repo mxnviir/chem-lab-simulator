@@ -243,7 +243,7 @@ main{display:grid;grid-template-columns:300px 1fr 390px;height:calc(100vh - 60px
 </head>
 <body>
 <header>
-  <div class="brand"><div class="logo">⚗</div><div>ChemLab<small>Qualitative analysis of a simple salt · CBSE Class XI · <span class="ver">build 12</span></small></div></div>
+  <div class="brand"><div class="logo">⚗</div><div>ChemLab<small>Qualitative analysis of a simple salt · CBSE Class XI · <span class="ver">build 13</span></small></div></div>
   <div class="salt-tag" id="saltTag">Unknown salt</div>
   <div class="actions">
     <div class="modesw" id="modeSw" title="Learning shows the procedure, the inferences and how all three salts behave. Test hides them all.">
@@ -1327,10 +1327,16 @@ function ashTest(){
     t.items=[]; t.colour=null; renderShelf(currentCat); renderContents(); return;
   }
   const a=ASH[salt.c]||ASH.none;
+  // The same burn is a physical-examination test or the Al³⁺ confirmation, depending on
+  // which one you are running, and the record words the inference differently for each.
+  const gsec=selectedTest?(GUIDE.find(g=>g.tests.includes(selectedTest))||{}).sec:null;
+  const asConf=!!(selectedTest&&selectedTest.sim&&selectedTest.sim.kind==='ash'&&gsec===CC);
+  const sec=asConf?CC:PH, name=asConf?'Ash test (Al³⁺ confirmation)':'Ash test';
+  const inf=asConf?(salt.c==='Al'?'Presence of Al³⁺ is confirmed':'Absence of Al³⁺'):a.inf;
   $('#rodOverlay').innerHTML=`<svg viewBox="0 0 120 150"><circle cx="60" cy="70" r="26" fill="#fff" stroke="#cbd5e1" stroke-width="2"><animate attributeName="fill" to="${a.hex}" dur="2s" begin="0.8s" fill="freeze"/><animate attributeName="r" to="18" dur="2s" begin="0.8s" fill="freeze"/></circle><path d="M40 60q10-18 22-6q6-14 20 4" fill="none" stroke="#f97316" stroke-width="3" opacity=".9"><animate attributeName="opacity" to="0" dur="2s" begin="1s" fill="freeze"/></path></svg>`;
   $('#rodOverlay').classList.add('show'); setTimeout(()=>$('#rodOverlay').classList.remove('show'),4500);
   t.items=[]; t.colour=null; renderShelf(currentCat); renderContents();
-  showObs({sec:PH,test:'Ash test',exp:'Filter paper carrying salt + conc. HNO₃ + Co(NO₃)₂, burnt in the flame',obs:a.obs,inf:a.inf,swatch:a.hex,recordable:true});
+  showObs({sec,test:name,exp:'Filter paper carrying salt + conc. HNO₃ + Co(NO₃)₂, burnt in the flame',obs:a.obs,inf,swatch:a.hex,recordable:true});
 }
 function observeSalt(){
   const cat=CATIONS[salt.c],col=salt.color||cat.color;
