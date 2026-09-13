@@ -56,6 +56,16 @@ button.reveal-inf{padding:3px 10px;font-size:12px;border-radius:8px;border-style
 .cmp .here{background:#fffbeb}
 /* ---------- layout ---------- */
 main{display:grid;grid-template-columns:300px 1fr 390px;height:calc(100vh - 60px);gap:14px;padding:14px;transition:grid-template-columns .28s ease}
+/* framed photo hanging on the wall behind the bench */
+.photo{position:absolute;top:118px;right:26px;z-index:1;width:168px;padding:9px;background:linear-gradient(160deg,#a9743f,#7c4f26);
+  border-radius:5px;box-shadow:0 10px 24px rgba(16,24,40,.28),inset 0 0 0 2px rgba(255,255,255,.18);transform:rotate(-2deg)}
+.photo:before{content:"";position:absolute;left:50%;top:-14px;width:2px;height:14px;background:#94a3b8;margin-left:-1px}
+.photo img{display:block;width:100%;height:auto;border-radius:2px;background:#fff;box-shadow:0 0 0 5px #fdfbf5,0 1px 4px rgba(0,0,0,.35)}
+.photo-x{position:absolute;top:-9px;right:-9px;width:20px;height:20px;padding:0;border-radius:50%;font-size:10px;line-height:1;
+  background:#fff;color:var(--muted);border:1px solid var(--line);opacity:0;transition:.15s}
+.photo:hover .photo-x{opacity:1}
+.photo-x:hover{background:var(--bad);color:#fff;border-color:var(--bad)}
+@media (max-width:1100px){.photo{display:none}}
 /* collapse the right-hand panel out of the way */
 body.panel-hidden main{grid-template-columns:300px 1fr 0px}
 body.panel-hidden #sidePanel{opacity:0;pointer-events:none;min-width:0;padding:0;border:0}
@@ -256,13 +266,14 @@ body.panel-hidden #panelToggle{right:0}
 </head>
 <body>
 <header>
-  <div class="brand"><div class="logo">⚗</div><div>ChemLab<small>Qualitative analysis of a simple salt · CBSE Class XI · <span class="ver">build 15</span></small></div></div>
+  <div class="brand"><div class="logo">⚗</div><div>ChemLab<small>Qualitative analysis of a simple salt · CBSE Class XI · <span class="ver">build 16</span></small></div></div>
   <div class="salt-tag" id="saltTag">Unknown salt</div>
   <div class="actions">
     <div class="modesw" id="modeSw" title="Learning shows the procedure, the inferences and how all three salts behave. Test hides them all.">
       <button data-mode="learn" class="on">📖 Learning</button><button data-mode="test">🎯 Test</button>
     </div>
     <label class="tg" title="Sound effects — pouring, effervescence, the burner"><input type="checkbox" id="tgSfx"><span class="tg-track"></span><span class="tg-lbl">SFX</span></label>
+    <label class="tg" id="tgPhotoWrap" title="Show the framed photo on the wall" hidden><input type="checkbox" id="tgPhoto"><span class="tg-track"></span><span class="tg-lbl">🖼</span></label>
     <button id="btnNew">New salt</button>
     <button id="btnPrint">Print record</button>
     <button class="primary" id="btnReport">Report result</button>
@@ -300,6 +311,7 @@ body.panel-hidden #panelToggle{right:0}
       </div>
     </div>
 
+    <div class="photo" id="benchPhoto" hidden><img id="benchPhotoImg" alt=""><button class="photo-x" id="benchPhotoX" title="Hide the photo" aria-label="Hide the photo">✕</button></div>
     <div class="bench-main" id="benchMain">
       <div class="stand">
         <div class="clamp"></div>
@@ -1216,10 +1228,11 @@ function drawSalt(avoid){
 // Only the settings persist. The salt is never restored — reloading gives a fresh
 // unknown, and a notebook from the previous salt would not belong to it.
 function save(){ try{ const r=document.getElementById('roughText');
-  localStorage.setItem('chemlab',JSON.stringify({mode,sfx:sfxOn,pool:[...pool],last:SALTS.indexOf(salt),rough:r?r.value:'',panel:panelHidden})); }catch(e){} }
+  localStorage.setItem('chemlab',JSON.stringify({mode,sfx:sfxOn,pool:[...pool],last:SALTS.indexOf(salt),rough:r?r.value:'',panel:panelHidden,photo:photoShown})); }catch(e){} }
 function load(){ try{ const d=JSON.parse(localStorage.getItem('chemlab')); if(d){
   if(d.mode==='learn'||d.mode==='test') mode=d.mode;
   panelHidden=!!d.panel;
+  if(typeof d.photo==='boolean') photoShown=d.photo;
   sfxOn=!!d.sfx;
   if(typeof d.rough==='string'){ const r=document.getElementById('roughText'); if(r) r.value=d.rough; }
   if(Array.isArray(d.pool)&&d.pool.length) pool=new Set(d.pool.filter(i=>SALTS[i]));
@@ -1539,6 +1552,25 @@ function applySettings(){
   gt.style.display=mode==='learn'?'':'none';
   if(mode==='test'&&gt.classList.contains('active')) $('.side-tabs button[data-side="nb"]').click();
 }
+// Framed photo on the wall. Drop an image next to index.html under one of these names
+// and it appears by itself; with no file there, the frame and its toggle stay hidden.
+const PHOTO_FILES=['lab-photo.png','lab-photo.jpg'];
+let photoShown=true,photoFound=false;
+function applyPhoto(){
+  $('#benchPhoto').hidden=!(photoFound&&photoShown);
+  $('#tgPhotoWrap').hidden=!photoFound;
+  $('#tgPhoto').checked=photoShown;
+}
+(function findPhoto(i){
+  if(i>=PHOTO_FILES.length){ applyPhoto(); return; }
+  const img=$('#benchPhotoImg');
+  img.onload=()=>{ photoFound=true; applyPhoto(); };
+  img.onerror=()=>findPhoto(i+1);
+  img.src=PHOTO_FILES[i];
+})(0);
+$('#tgPhoto').onchange=e=>{ photoShown=e.target.checked; applyPhoto(); save(); };
+$('#benchPhotoX').onclick=()=>{ photoShown=false; applyPhoto(); save(); toast('Photo hidden — the 🖼 switch brings it back.'); };
+
 // Collapse the right-hand panel so the bench gets the whole width.
 let panelHidden=false;
 function applyPanel(){
@@ -1570,7 +1602,7 @@ $('#selCation').innerHTML=Object.entries(CATIONS).map(([k,v])=>`<option value="$
 const prevSalt=load();          // settings only; the unknown is drawn fresh every load
 salt=drawSalt(prevSalt);
 save();                         // record it now, so the next load avoids repeating it
-applySettings(); applyPanel(); renderSaltList(); roughCount();
+applySettings(); applyPanel(); applyPhoto(); renderSaltList(); roughCount();
 renderShelf('acid'); renderGuide(); renderDish(); renderNotebook(); refresh('beaker',true); refresh('tube');
 showObs({test:'Welcome',sec:'',exp:'An unknown simple salt is given. Identify its anion and cation.',obs:'Choose a test in the procedure guide → drag the needed reagents on to the test tube (or beaker) → read the observation here → record it.',inf:'—'});
 // make the fresh draw visible, so a chance repeat is not mistaken for a stuck salt
