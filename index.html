@@ -55,26 +55,7 @@ button.reveal-inf{padding:3px 10px;font-size:12px;border-radius:8px;border-style
 .cmp td.o{color:#374151}
 .cmp .here{background:#fffbeb}
 /* ---------- layout ---------- */
-main{display:grid;grid-template-columns:300px 1fr 390px;height:calc(100vh - 60px);gap:14px;padding:14px;transition:grid-template-columns .28s ease}
-/* framed photo hanging on the wall behind the bench */
-.photo{position:absolute;top:118px;right:26px;z-index:1;width:168px;padding:9px;background:linear-gradient(160deg,#a9743f,#7c4f26);
-  border-radius:5px;box-shadow:0 10px 24px rgba(16,24,40,.28),inset 0 0 0 2px rgba(255,255,255,.18);transform:rotate(-2deg)}
-.photo:before{content:"";position:absolute;left:50%;top:-14px;width:2px;height:14px;background:#94a3b8;margin-left:-1px}
-.photo img{display:block;width:100%;height:auto;border-radius:2px;background:#fff;box-shadow:0 0 0 5px #fdfbf5,0 1px 4px rgba(0,0,0,.35)}
-.photo-x{position:absolute;top:-9px;right:-9px;width:20px;height:20px;padding:0;border-radius:50%;font-size:10px;line-height:1;
-  background:#fff;color:var(--muted);border:1px solid var(--line);opacity:0;transition:.15s}
-.photo:hover .photo-x{opacity:1}
-.photo-x:hover{background:var(--bad);color:#fff;border-color:var(--bad)}
-@media (max-width:1100px){.photo{display:none}}
-/* collapse the right-hand panel out of the way */
-body.panel-hidden main{grid-template-columns:300px 1fr 0px}
-body.panel-hidden #sidePanel{opacity:0;pointer-events:none;min-width:0;padding:0;border:0}
-#sidePanel{transition:opacity .2s}
-#panelToggle{position:fixed;top:50%;right:404px;transform:translateY(-50%);z-index:30;width:22px;height:60px;padding:0;
-  display:grid;place-items:center;font-size:13px;color:var(--muted);background:#fff;border:1px solid var(--line);
-  border-radius:8px 0 0 8px;border-right:0;box-shadow:-2px 0 8px rgba(16,24,40,.07);transition:right .28s ease,color .15s}
-#panelToggle:hover{color:var(--accent);border-color:#c7d2fe}
-body.panel-hidden #panelToggle{right:0}
+main{display:grid;grid-template-columns:300px 1fr 390px;height:calc(100vh - 60px);gap:14px;padding:14px}
 .panel{background:var(--panel);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column;min-height:0}
 .panel-h{padding:12px 14px;border-bottom:1px solid var(--line);font-weight:700;font-size:13px;letter-spacing:.3px;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:8px}
 /* ---------- shelf ---------- */
@@ -255,10 +236,6 @@ body.panel-hidden #panelToggle{right:0}
   header{height:auto;flex-wrap:wrap;gap:10px;padding:10px 14px}
   .salt-tag{margin-left:0}
   main{grid-template-columns:1fr;height:auto}
-  /* the columns stack here, so there is nothing to collapse */
-  #panelToggle{display:none}
-  body.panel-hidden main{grid-template-columns:1fr}
-  body.panel-hidden #sidePanel{opacity:1;pointer-events:auto;padding:revert;border:revert}
   .bench{min-height:720px}
   .items{grid-template-columns:repeat(5,1fr)}
 }
@@ -266,14 +243,13 @@ body.panel-hidden #panelToggle{right:0}
 </head>
 <body>
 <header>
-  <div class="brand"><div class="logo">⚗</div><div>ChemLab<small>Qualitative analysis of a simple salt · CBSE Class XI · <span class="ver">build 16</span></small></div></div>
+  <div class="brand"><div class="logo">⚗</div><div>ChemLab<small>Qualitative analysis of a simple salt · CBSE Class XI · <span class="ver">build 14</span></small></div></div>
   <div class="salt-tag" id="saltTag">Unknown salt</div>
   <div class="actions">
     <div class="modesw" id="modeSw" title="Learning shows the procedure, the inferences and how all three salts behave. Test hides them all.">
       <button data-mode="learn" class="on">📖 Learning</button><button data-mode="test">🎯 Test</button>
     </div>
     <label class="tg" title="Sound effects — pouring, effervescence, the burner"><input type="checkbox" id="tgSfx"><span class="tg-track"></span><span class="tg-lbl">SFX</span></label>
-    <label class="tg" id="tgPhotoWrap" title="Show the framed photo on the wall" hidden><input type="checkbox" id="tgPhoto"><span class="tg-track"></span><span class="tg-lbl">🖼</span></label>
     <button id="btnNew">New salt</button>
     <button id="btnPrint">Print record</button>
     <button class="primary" id="btnReport">Report result</button>
@@ -311,7 +287,6 @@ body.panel-hidden #panelToggle{right:0}
       </div>
     </div>
 
-    <div class="photo" id="benchPhoto" hidden><img id="benchPhotoImg" alt=""><button class="photo-x" id="benchPhotoX" title="Hide the photo" aria-label="Hide the photo">✕</button></div>
     <div class="bench-main" id="benchMain">
       <div class="stand">
         <div class="clamp"></div>
@@ -394,8 +369,7 @@ body.panel-hidden #panelToggle{right:0}
   </section>
 
   <!-- ===== SIDE ===== -->
-  <button id="panelToggle" title="Hide the panel (H)" aria-label="Hide the panel">❯</button>
-  <aside class="panel" id="sidePanel">
+  <aside class="panel">
     <div class="obs" id="obs">
       <div class="head"><span class="badge" id="obsTest">Ready</span><span class="badge sec" id="obsSec"></span></div>
       <div class="row"><b>Experiment</b><div id="obsExp">Pick a test from the guide below, or drag reagents on to the test tube.</div></div>
@@ -1228,11 +1202,9 @@ function drawSalt(avoid){
 // Only the settings persist. The salt is never restored — reloading gives a fresh
 // unknown, and a notebook from the previous salt would not belong to it.
 function save(){ try{ const r=document.getElementById('roughText');
-  localStorage.setItem('chemlab',JSON.stringify({mode,sfx:sfxOn,pool:[...pool],last:SALTS.indexOf(salt),rough:r?r.value:'',panel:panelHidden,photo:photoShown})); }catch(e){} }
+  localStorage.setItem('chemlab',JSON.stringify({mode,sfx:sfxOn,pool:[...pool],last:SALTS.indexOf(salt),rough:r?r.value:''})); }catch(e){} }
 function load(){ try{ const d=JSON.parse(localStorage.getItem('chemlab')); if(d){
   if(d.mode==='learn'||d.mode==='test') mode=d.mode;
-  panelHidden=!!d.panel;
-  if(typeof d.photo==='boolean') photoShown=d.photo;
   sfxOn=!!d.sfx;
   if(typeof d.rough==='string'){ const r=document.getElementById('roughText'); if(r) r.value=d.rough; }
   if(Array.isArray(d.pool)&&d.pool.length) pool=new Set(d.pool.filter(i=>SALTS[i]));
@@ -1552,41 +1524,6 @@ function applySettings(){
   gt.style.display=mode==='learn'?'':'none';
   if(mode==='test'&&gt.classList.contains('active')) $('.side-tabs button[data-side="nb"]').click();
 }
-// Framed photo on the wall. Drop an image next to index.html under one of these names
-// and it appears by itself; with no file there, the frame and its toggle stay hidden.
-const PHOTO_FILES=['lab-photo.png','lab-photo.jpg'];
-let photoShown=true,photoFound=false;
-function applyPhoto(){
-  $('#benchPhoto').hidden=!(photoFound&&photoShown);
-  $('#tgPhotoWrap').hidden=!photoFound;
-  $('#tgPhoto').checked=photoShown;
-}
-(function findPhoto(i){
-  if(i>=PHOTO_FILES.length){ applyPhoto(); return; }
-  const img=$('#benchPhotoImg');
-  img.onload=()=>{ photoFound=true; applyPhoto(); };
-  img.onerror=()=>findPhoto(i+1);
-  img.src=PHOTO_FILES[i];
-})(0);
-$('#tgPhoto').onchange=e=>{ photoShown=e.target.checked; applyPhoto(); save(); };
-$('#benchPhotoX').onclick=()=>{ photoShown=false; applyPhoto(); save(); toast('Photo hidden — the 🖼 switch brings it back.'); };
-
-// Collapse the right-hand panel so the bench gets the whole width.
-let panelHidden=false;
-function applyPanel(){
-  document.body.classList.toggle('panel-hidden',panelHidden);
-  const b=$('#panelToggle');
-  b.textContent=panelHidden?'❮':'❯';
-  b.title=panelHidden?'Show the panel (H)':'Hide the panel (H)';
-  b.setAttribute('aria-label',b.title);
-}
-$('#panelToggle').onclick=()=>{ panelHidden=!panelHidden; applyPanel(); save(); };
-document.addEventListener('keydown',e=>{
-  if(e.key!=='h'&&e.key!=='H') return;
-  const t=e.target;
-  if((t&&t.closest&&t.closest('input,textarea,select'))||e.ctrlKey||e.metaKey||e.altKey) return;
-  panelHidden=!panelHidden; applyPanel(); save();
-});
 $('#modeSw').addEventListener('click',e=>{
   const b=e.target.closest('button'); if(!b||b.dataset.mode===mode) return;
   mode=b.dataset.mode; if(mode==='test') selectTest(null);
@@ -1602,7 +1539,7 @@ $('#selCation').innerHTML=Object.entries(CATIONS).map(([k,v])=>`<option value="$
 const prevSalt=load();          // settings only; the unknown is drawn fresh every load
 salt=drawSalt(prevSalt);
 save();                         // record it now, so the next load avoids repeating it
-applySettings(); applyPanel(); applyPhoto(); renderSaltList(); roughCount();
+applySettings(); renderSaltList(); roughCount();
 renderShelf('acid'); renderGuide(); renderDish(); renderNotebook(); refresh('beaker',true); refresh('tube');
 showObs({test:'Welcome',sec:'',exp:'An unknown simple salt is given. Identify its anion and cation.',obs:'Choose a test in the procedure guide → drag the needed reagents on to the test tube (or beaker) → read the observation here → record it.',inf:'—'});
 // make the fresh draw visible, so a chance repeat is not mistaken for a stuck salt
