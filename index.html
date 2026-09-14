@@ -243,7 +243,7 @@ main{display:grid;grid-template-columns:300px 1fr 390px;height:calc(100vh - 60px
 </head>
 <body>
 <header>
-  <div class="brand"><div class="logo">⚗</div><div>ChemLab<small>Qualitative analysis of a simple salt · CBSE Class XI · <span class="ver">build 14</span></small></div></div>
+  <div class="brand"><div class="logo">⚗</div><div>ChemLab<small>Qualitative analysis of a simple salt · CBSE Class XI · <span class="ver">build 15</span></small></div></div>
   <div class="salt-tag" id="saltTag">Unknown salt</div>
   <div class="actions">
     <div class="modesw" id="modeSw" title="Learning shows the procedure, the inferences and how all three salts behave. Test hides them all.">
@@ -404,7 +404,7 @@ main{display:grid;grid-template-columns:300px 1fr 390px;height:calc(100vh - 60px
 <div class="modal-bg" id="newModal"><div class="modal">
   <h2>New salt</h2><p>Draw a random unknown from the pool you choose, or set one directly. The vessels and notebook are cleared.</p>
   <div class="sa1box">
-    <div><b>SA1 practical</b><small>Ammonium carbonate · Aluminium sulphate · Lead nitrate</small></div>
+    <div><b>SA1 practical</b><small>Ammonium carbonate · Lead nitrate · Aluminium sulphate</small></div>
     <button class="primary" id="btnSA1">🎲 Random SA1 salt</button>
   </div>
   <button id="btnRandom">🎲 Random from pool</button>
@@ -887,7 +887,7 @@ function acidity(v){
   return 'neutral';
 }
 // The SA1 practical set — the three salts the practical record covers.
-const SA1_NAMES=['Ammonium carbonate','Aluminium sulphate','Lead nitrate'];
+const SA1_NAMES=['Ammonium carbonate','Lead nitrate','Aluminium sulphate'];   // salt 1, 2, 3 of the practical
 const SA1=SA1_NAMES.map(n=>SALTS.find(s=>s.n===n));
 const SA1_IDX=SA1.map(s=>SALTS.indexOf(s));
 let mode='learn';                                   // 'learn' | 'test'
